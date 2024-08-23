@@ -5,20 +5,29 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
-    public float moveSpeed;
+    private float _moveSpeed;
+    public float walkSpeed;
+    public float sprintSpeed;
 
+    [Space]
     public float groundDrag;
 
+    [Header("Jump")]
     public float jumpForce;
     public float jumpCooldown;
     public float airMultiplier;
 
     private bool _readyToJump;
 
+    [Header("Crouch")]
+    public float crouchSpeed;
+    public float crouchYScale;
+    private float _startYScale;
+
     [Header("Ground Check")]
     public float playerHeight;
     public LayerMask gorundLayer;
-    private bool _isGround;
+    [SerializeField] private bool _isGround;
 
     [SerializeField] private Transform _orientation;
 
@@ -28,6 +37,16 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 _moveInput;
     private Vector3 _moveDirection;
     private Rigidbody _rb;
+
+    public EMovementState movementState;
+
+    public enum EMovementState
+    {
+        Walk,
+        Sprint,
+        Crouch,
+        Air
+    }
 
     private void Awake()
     {
@@ -40,6 +59,7 @@ public class PlayerMovement : MonoBehaviour
     {
         _rb.freezeRotation = true;
         ResetJump();
+        _startYScale = transform.localScale.y;
     }
 
     private void Update()
@@ -48,6 +68,7 @@ public class PlayerMovement : MonoBehaviour
 
         MoveInput();
         SpeedControl();
+        StateHandler();
 
         if (_isGround)
             _rb.drag = groundDrag;
@@ -60,15 +81,61 @@ public class PlayerMovement : MonoBehaviour
         MovePlayer();
     }
 
+    private void StateHandler()
+    {
+        //Crouch
+        if (playerInputSystem.Player.Crouch.IsPressed())
+        {
+            movementState = EMovementState.Crouch;
+            _moveSpeed = crouchSpeed;
+            return;
+        }
+        // Sprint
+        if (_isGround && playerInputSystem.Player.Sprint.IsPressed())
+        {
+            movementState = EMovementState.Sprint;
+            _moveSpeed = sprintSpeed;
+            return;
+        }
+        // Walk
+        else if (_isGround)
+        {
+            movementState = EMovementState.Walk;
+            _moveSpeed = walkSpeed;
+            return;
+        }
+        // Air
+        else
+        {
+            movementState = EMovementState.Air;
+            return;
+        }
+    }
+
     private void MoveInput()
     {
         _moveInput = playerInputSystem.Player.Move.ReadValue<Vector2>().normalized;
 
+        //Jump
         if (playerInputSystem.Player.Jump.triggered && _readyToJump && _isGround)
         {
             _readyToJump = false;
             Jump();
             Invoke(nameof(ResetJump), jumpCooldown);
+        }
+
+        //Crouch Hold
+        if (playerInputSystem.Player.Crouch.IsPressed())
+        {
+            transform.localScale =
+                new Vector3(transform.localScale.x, crouchYScale, transform.localScale.z);
+            if (movementState != EMovementState.Crouch)
+                _rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+        }
+        else
+        {
+            transform.localScale =
+                new Vector3(transform.localScale.x, _startYScale, transform.localScale.z);
         }
     }
 
@@ -80,9 +147,12 @@ public class PlayerMovement : MonoBehaviour
 
         //Debug.Log($"Forward = {_orientation.forward}\nRight = {_orientation.right}");
         if (_isGround)
-            _rb.AddForce(_moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+        {
+            Debug.Log(_moveDirection);
+            _rb.AddForce(_moveDirection.normalized * _moveSpeed * 10f, ForceMode.Force);
+        }
         else
-            _rb.AddForce(_moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+            _rb.AddForce(_moveDirection.normalized * _moveSpeed * 10f * airMultiplier, ForceMode.Force);
 
     }
 
@@ -96,9 +166,9 @@ public class PlayerMovement : MonoBehaviour
     {
         Vector3 flatVel = new Vector3(_rb.velocity.x, 0f, _rb.velocity.z);
 
-        if (flatVel.magnitude > moveSpeed)
+        if (flatVel.magnitude > _moveSpeed)
         {
-            Vector3 limitedVel = flatVel.normalized * moveSpeed;
+            Vector3 limitedVel = flatVel.normalized * _moveSpeed;
             _rb.velocity = new Vector3(limitedVel.x, _rb.velocity.y, limitedVel.z);
         }
     }
