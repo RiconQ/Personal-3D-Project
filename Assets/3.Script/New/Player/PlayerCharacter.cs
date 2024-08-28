@@ -283,7 +283,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                     steerVelocity += steerForce;
                     steerVelocity = Vector3.ClampMagnitude(steerVelocity, currentSpeed);
 
-                    _state.Acceleration = steerVelocity - currentVelocity;
+                    _state.Acceleration = (steerVelocity - currentVelocity) / deltaTime;
 
                     currentVelocity = steerVelocity;
                 }
