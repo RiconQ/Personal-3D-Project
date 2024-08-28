@@ -49,6 +49,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private float _walkResponse = 25f;
     [SerializeField] private float _crouchResponse = 20f;
 
+    [Space]
     [Header("Jump")]
     [SerializeField] private float _jumpSpeed = 20f;
     [SerializeField] private float _coyoteTime = 0.2f;
@@ -56,6 +57,20 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private float _jumpSustainGravity = 0.4f;
     [SerializeField] private float _gravity = -90f;
 
+    [Space]
+    [Header("Wall Jump")]
+    [SerializeField] private bool _allowWallJump = true;
+    //[SerializeField] private float _wallJumpHorizontalSpeed = 1f;
+    [SerializeField] private float _wallJumpMultiplier = 1f;
+    [SerializeField] private float _wallJumpAcceleration = 0f;
+
+    [Space]
+    [Header("Wall Running")]
+    [SerializeField] private bool _allowWallRunning = true;
+    [SerializeField] private float _wallRunGravity = 0.05f;
+    [SerializeField] private float _wallRunAcceleration = 5f;
+
+    [Space]
     [Header("Sliding")]
     [SerializeField] private float _slideStartSpeed = 25f;
     [SerializeField] private float _slideEndSpeed = 15;
@@ -63,6 +78,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private float _slideSteerAcceleration = 5f;
     [SerializeField] private float _slideGravity = -90f;
 
+    [Space]
     [Header("Air Control")]
     [SerializeField] private float _airSpeed = 15f;
     [SerializeField] private float _airAcceleration = 70f;
@@ -89,9 +105,17 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private bool _requestedCrouch;
     private bool _requestedCrouchInAir;
 
+    // Coyote Jump
     private float _timeSinceUngrounded;
     private float _timeSinceJumpRequest;
     private bool _ungroundedDueToJump;
+
+    // Wall Jump
+    private bool _canWallJump;
+    private Vector3 _wallJumpNormal;
+
+    // Wall Running
+    private bool _canWallRunning;
 
     private Collider[] _uncrouchOverlapResults;
 
@@ -293,6 +317,22 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                     _state.Stance = EStance.Crouch;
             }
         }
+        // if player on Wall
+        else if(_canWallRunning)
+        {
+            Debug.Log("Doing Wall running");
+            // Direction
+            var wallRunDirection = _motor.CharacterForward * _wallRunAcceleration;
+            Debug.DrawRay(transform.position, wallRunDirection, Color.red);
+
+            // Gravity
+            var targetGravity = _wallRunGravity;
+
+            currentVelocity += wallRunDirection * deltaTime;
+            currentVelocity.y = 0;
+            //currentVelocity.y = Mathf.Clamp(currentVelocity.y, -90, 0);
+            _canWallRunning = false;
+        }
         // character is in air
         else
         {
@@ -384,7 +424,9 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             var grounded = _motor.GroundingStatus.IsStableOnGround;
             var canCoyoteJump = _timeSinceUngrounded < _coyoteTime && !_ungroundedDueToJump;
 
-            if (grounded || canCoyoteJump)
+            var jumpDirection = _motor.CharacterUp;
+
+            if (grounded || canCoyoteJump || _canWallJump)
             {
                 _requestedJump = false;     //Unset jump request
                 _requestedCrouch = false;   // and request the character uncrouch
@@ -398,8 +440,21 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                 var currentVerticalSpeed = Vector3.Dot(currentVelocity, _motor.CharacterUp);
                 var targetVerticalSpeed = Mathf.Max(currentVerticalSpeed, _jumpSpeed);
 
+                // Wall Jump
+                if (_canWallJump)
+                {
+                    Debug.Log("Do Wall Jump");
+                    jumpDirection += _wallJumpNormal * 0.7f;
+
+                    jumpDirection.y *= _wallJumpMultiplier;
+                    jumpDirection += _motor.CharacterForward * _wallJumpAcceleration;
+
+                    // Reset wall jump
+                    _canWallJump = false;
+                }
+
                 // Add the difference in current and target vertical speed to the character's velocity
-                currentVelocity += _motor.CharacterUp * (targetVerticalSpeed - currentVerticalSpeed);
+                currentVelocity += jumpDirection * (targetVerticalSpeed - currentVerticalSpeed);
             }
             else
             {
@@ -432,7 +487,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         if (forward != Vector3.zero)
             currentRotation = Quaternion.LookRotation(forward, _motor.CharacterUp);
     }
-
 
     public void BeforeCharacterUpdate(float deltaTime)
     {
@@ -502,9 +556,37 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     public void OnGroundHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
+       // Debug.Log("Ground Hit");
     }
     public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
+        // if Allow Wall jump && player is not on stable on ground &&
+        // moving against an obstruction && hitCollider has Wall tag
+        // -> Can Wall Jump
+        if (_allowWallJump && !_motor.GroundingStatus.IsStableOnGround &&
+            !hitStabilityReport.IsStable && hitCollider.gameObject.CompareTag("Wall"))
+        {
+            //Debug.Log("Can wall jump");
+            //Debug.DrawRay(transform.position, hitNormal, Color.magenta);
+            _canWallJump = true;
+            _wallJumpNormal = hitNormal;
+        }
+
+        //if Allow Wall Running && player is not on Stabel on ground &&
+        // moving against an obstruction && hit collider has wall tag
+        // if degree between player forward and wall normal >= 15f
+        // -> Can Wall Running
+        if (_allowWallRunning && !_motor.GroundingStatus.IsStableOnGround &&
+            !hitStabilityReport.IsStable && hitCollider.gameObject.CompareTag("Wall"))
+        {
+            //Debug.Log("Check Wall Run");
+            var anglePlayerToWall = Vector3.Angle(_motor.CharacterForward, hitNormal);
+            if (anglePlayerToWall >= 15)
+            {
+                Debug.Log("Can Wall Run");
+                _canWallRunning = true;
+            }
+        }
     }
     public bool IsColliderValidForCollisions(Collider coll)
     {

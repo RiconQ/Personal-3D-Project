@@ -21,7 +21,7 @@ public class PlayerCamera : MonoBehaviour
     {
         _eulerAngles += new Vector3(-input.Look.y, input.Look.x) * _sensitivity;
         //debug
-        //_eulerAngles.x = Mathf.Clamp(_eulerAngles.x, -90, 90);
+        _eulerAngles.x = Mathf.Clamp(_eulerAngles.x, -89, 89);
         
         transform.eulerAngles = _eulerAngles;
     }
