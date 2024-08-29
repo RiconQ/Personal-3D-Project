@@ -34,6 +34,15 @@ public class Legacy_WallRunning : MonoBehaviour
         _playerMovement = GetComponent<Legacy_PlayerMovement>();
     }
 
+    private void FixedUpdate()
+    {
+        if (_playerMovement.wallRunning)
+        {
+            WallRunningMovement();
+            StateMachine();
+        }
+    }
+
     private void Update()
     {
         CheckForWall();
@@ -43,6 +52,59 @@ public class Legacy_WallRunning : MonoBehaviour
     {
         _wallRight = Physics.Raycast(transform.position, orientation.right, out _rightWallHit, wallCheckDistance, whatIsWall);
         _wallLeft = Physics.Raycast(transform.position, -orientation.right, out _leftWallHit, wallCheckDistance, whatIsWall);
-        
+    }
+
+    private bool AboveGround()
+    {
+        return !Physics.Raycast(transform.position, Vector3.down, minJumpHeight, whatIsWall);
+    }
+
+    private void StateMachine()
+    {
+        _horizontalInput = Input.GetAxisRaw("Horizontal");
+        _verticalInput = Input.GetAxisRaw("Vertical");
+
+        if ((_wallLeft || _wallRight) && _verticalInput > 0 && AboveGround())
+        {
+            //Start Wall Run
+
+            if (!_playerMovement.wallRunning)
+                StartWallRun();
+        }
+        else
+        {
+            if (_playerMovement.wallRunning)
+                StopWallRun();
+        }
+    }
+
+    private void StartWallRun()
+    {
+        _playerMovement.wallRunning = true;
+    }
+
+    private void WallRunningMovement()
+    {
+        _rb.useGravity = false;
+        _rb.velocity = new Vector3(_rb.velocity.x, 0f, _rb.velocity.z);
+
+        Vector3 wallNormal = _wallRight ? _rightWallHit.normal : _leftWallHit.normal;
+
+        Vector3 wallForward = Vector3.Cross(wallNormal, transform.up);
+
+        if ((orientation.forward - wallForward).magnitude > (orientation.forward - -wallForward).magnitude)
+            wallForward = -wallForward;
+
+        _rb.AddForce(wallForward * wallRunForce, ForceMode.Force);
+
+
+        if (!(_wallLeft && _horizontalInput > 0) && !(_wallRight && _horizontalInput < 0))
+            _rb.AddForce(-wallNormal * 100, ForceMode.Force);
+    }
+
+    private void StopWallRun()
+    {
+
+        _playerMovement.wallRunning = false;
     }
 }

@@ -344,7 +344,7 @@ GameObject:
   - component: {fileID: 66367860}
   - component: {fileID: 66367859}
   - component: {fileID: 66367858}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: Cube (4)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -1197,7 +1197,7 @@ GameObject:
   - component: {fileID: 495251575}
   - component: {fileID: 495251574}
   - component: {fileID: 495251573}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: Cube (5)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -1873,7 +1873,7 @@ GameObject:
   - component: {fileID: 968690748}
   - component: {fileID: 968690747}
   - component: {fileID: 968690746}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: Cube (1)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -1978,7 +1978,7 @@ GameObject:
   - component: {fileID: 982273265}
   - component: {fileID: 982273264}
   - component: {fileID: 982273263}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: Cube (6)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -2400,7 +2400,7 @@ GameObject:
   - component: {fileID: 1048612476}
   - component: {fileID: 1048612475}
   - component: {fileID: 1048612474}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: Cube (7)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -2610,6 +2610,7 @@ GameObject:
   - component: {fileID: 1104484258}
   - component: {fileID: 1104484260}
   - component: {fileID: 1104484261}
+  - component: {fileID: 1104484262}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -2677,6 +2678,7 @@ MonoBehaviour:
   walkSpeed: 7
   sprintSpeed: 10
   slideSpeed: 30
+  wallRunSpeed: 8.5
   speedIncreaseMultiplier: 1.5
   slopeIncreaseMultiplier: 2.5
   groundDrag: 4
@@ -2696,6 +2698,7 @@ MonoBehaviour:
   orientation: {fileID: 212477470}
   state: 0
   isSliding: 0
+  wallRunning: 0
 --- !u!114 &1104484261
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2714,6 +2717,29 @@ MonoBehaviour:
   slideForce: 200
   slideYScale: 0.5
   slideKey: 306
+--- !u!114 &1104484262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1104484257}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37376f475938c084b82cbcc59ed250bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  whatIsWall:
+    serializedVersion: 2
+    m_Bits: 128
+  whatIsGround:
+    serializedVersion: 2
+    m_Bits: 512
+  wallRunForce: 200
+  maxWallRunTime: 1.5
+  wallCheckDistance: 0.7
+  minJumpHeight: 2
+  orientation: {fileID: 212477470}
 --- !u!1 &1127198642
 GameObject:
   m_ObjectHideFlags: 0
@@ -3109,7 +3135,7 @@ GameObject:
   - component: {fileID: 1221252259}
   - component: {fileID: 1221252258}
   - component: {fileID: 1221252257}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: Cube (8)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -4042,7 +4068,7 @@ GameObject:
   - component: {fileID: 1636750538}
   - component: {fileID: 1636750537}
   - component: {fileID: 1636750536}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: Cube
   m_TagString: Wall
   m_Icon: {fileID: 0}

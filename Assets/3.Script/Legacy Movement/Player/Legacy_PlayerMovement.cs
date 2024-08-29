@@ -7,6 +7,7 @@ public enum EMovementState
     Walking,
     Sprinting,
     Crouching,
+    WallRunning,
     Sliding,
     Air
 }
@@ -18,6 +19,7 @@ public class Legacy_PlayerMovement : MonoBehaviour
     public float walkSpeed;
     public float sprintSpeed;
     public float slideSpeed;
+    public float wallRunSpeed;
 
     private float _desiredMoveSpeed;
     private float _lastDesiredMoveSpeed;
@@ -64,6 +66,7 @@ public class Legacy_PlayerMovement : MonoBehaviour
     public EMovementState state;
 
     public bool isSliding;
+    public bool wallRunning;
 
     private void Start()
     {
@@ -190,6 +193,12 @@ public class Legacy_PlayerMovement : MonoBehaviour
 
     private void StateHandler()
     {
+        if (wallRunning)
+        {
+            state = EMovementState.WallRunning;
+            _desiredMoveSpeed = wallRunSpeed;
+        }
+
         // sliding
         if (isSliding)
         {
