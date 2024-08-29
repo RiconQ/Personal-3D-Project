@@ -56,7 +56,8 @@ public class Player : MonoBehaviour
             Jump        = input.Jump.WasPressedThisFrame(),
             JumpSustain = input.Jump.IsPressed(),
             Crouch      = input.Crouch.WasPressedThisFrame() ?
-                            ECrouchInput.Toggle : ECrouchInput.None
+                            ECrouchInput.Toggle : ECrouchInput.None,
+            Grappling   = input.Grappling.WasPressedThisFrame()
         };
 
         _playerCharacter.UpdateInput(characterInput);
