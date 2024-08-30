@@ -7,6 +7,7 @@ public enum EMovementState
     Walking,
     Sprinting,
     Crouching,
+    Climbing,
     WallRunning,
     Sliding,
     Air
@@ -20,6 +21,7 @@ public class Legacy_PlayerMovement : MonoBehaviour
     public float sprintSpeed;
     public float slideSpeed;
     public float wallRunSpeed;
+    public float climbSpeed;
 
     private float _desiredMoveSpeed;
     private float _lastDesiredMoveSpeed;
@@ -48,7 +50,7 @@ public class Legacy_PlayerMovement : MonoBehaviour
     [Header("Ground Check")]
     public float playerHeight;
     public LayerMask whatIsGround;
-    private bool _grounded;
+    public bool grounded;
 
     [Header("Slope Handling")]
     public float maxSlopeAngle;
@@ -67,6 +69,10 @@ public class Legacy_PlayerMovement : MonoBehaviour
 
     public bool isSliding;
     public bool wallRunning;
+    public bool isClimbing;
+
+    [Header("Reference")]
+    public Legacy_Climbing _climbingScript;
 
     private void Start()
     {
@@ -81,14 +87,14 @@ public class Legacy_PlayerMovement : MonoBehaviour
     private void Update()
     {
         //Ground Check
-        _grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
+        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
 
         MyInput();
         SpeedControl();
         StateHandler();
 
         //handle drag
-        if (_grounded)
+        if (grounded)
             _rb.drag = groundDrag;
         else
             _rb.drag = 0;
@@ -106,7 +112,7 @@ public class Legacy_PlayerMovement : MonoBehaviour
         _verticalInput = Input.GetAxisRaw("Vertical");
 
         //when to jump
-        if (Input.GetKey(jumpKey) && readyToJump && _grounded)
+        if (Input.GetKey(jumpKey) && readyToJump && grounded)
         {
             readyToJump = false;
 
@@ -131,6 +137,7 @@ public class Legacy_PlayerMovement : MonoBehaviour
 
     private void MovePlayer()
     {
+        if (_climbingScript.exitingWall) return;
         _moveDirection = orientation.forward * _verticalInput + orientation.right * _horizontalInput;
 
         // on slope
@@ -143,17 +150,19 @@ public class Legacy_PlayerMovement : MonoBehaviour
         }
 
         //on ground
-        if (_grounded)
+        if (grounded)
         {
             //Debug.Log("Grounded");
             //Debug.Log(_moveDirection.normalized);
             _rb.AddForce(_moveDirection.normalized * _moveSpeed * 10f, ForceMode.Force);
         }
         // in air
-        else if (!_grounded)
+        else if (!grounded)
             _rb.AddForce(_moveDirection.normalized * _moveSpeed * 10f * airMultiplier, ForceMode.Force);
 
-        _rb.useGravity = !OnSlope();
+        //turn gravity off while on slope
+        if (!wallRunning)
+            _rb.useGravity = !OnSlope();
     }
 
     private void SpeedControl()
@@ -193,14 +202,20 @@ public class Legacy_PlayerMovement : MonoBehaviour
 
     private void StateHandler()
     {
-        if (wallRunning)
+        if(isClimbing)
+        {
+            state = EMovementState.Climbing;
+            _desiredMoveSpeed = climbSpeed;
+        }
+
+        else if (wallRunning)
         {
             state = EMovementState.WallRunning;
             _desiredMoveSpeed = wallRunSpeed;
         }
 
         // sliding
-        if (isSliding)
+        else if (isSliding)
         {
             state = EMovementState.Sliding;
 
@@ -223,13 +238,13 @@ public class Legacy_PlayerMovement : MonoBehaviour
         }
 
         // Sprinting
-        else if (_grounded && Input.GetKey(sprintKey))
+        else if (grounded && Input.GetKey(sprintKey))
         {
             state = EMovementState.Sprinting;
             _desiredMoveSpeed = sprintSpeed;
         }
         // Walking
-        else if (_grounded)
+        else if (grounded)
         {
             state = EMovementState.Walking;
             _desiredMoveSpeed = walkSpeed;
@@ -240,7 +255,7 @@ public class Legacy_PlayerMovement : MonoBehaviour
             state = EMovementState.Air;
         }
 
-        if(Mathf.Abs(_desiredMoveSpeed - _lastDesiredMoveSpeed) > 4f && _moveSpeed != 0)
+        if (Mathf.Abs(_desiredMoveSpeed - _lastDesiredMoveSpeed) > 4f && _moveSpeed != 0)
         {
             StopAllCoroutines();
             StartCoroutine(SmoothlyLerpMoveSpeed());
@@ -261,9 +276,9 @@ public class Legacy_PlayerMovement : MonoBehaviour
 
         while (time < difference)
         {
-            _moveSpeed = Mathf.Lerp(startValue, _desiredMoveSpeed, time/difference);
+            _moveSpeed = Mathf.Lerp(startValue, _desiredMoveSpeed, time / difference);
 
-            if(OnSlope())
+            if (OnSlope())
             {
                 float slopeAngle = Vector3.Angle(Vector3.up, _slopeHit.normal);
                 float slopeAngleIncrease = 1 + (slopeAngle / 90f);
@@ -274,7 +289,7 @@ public class Legacy_PlayerMovement : MonoBehaviour
             {
                 time += Time.deltaTime * speedIncreaseMultiplier;
             }
-            
+
             time += Time.deltaTime;
             yield return null;
         }
