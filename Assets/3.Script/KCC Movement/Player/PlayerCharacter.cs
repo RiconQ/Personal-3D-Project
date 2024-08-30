@@ -31,17 +31,14 @@ public struct CharacterInput
     public bool Jump;
     public bool JumpSustain;
     public ECrouchInput Crouch;
-    public bool Grappling;
 }
 
 public class PlayerCharacter : MonoBehaviour, ICharacterController
 {
-    #region Inspector Variables
     [Header("Assignables")]
     [SerializeField] private KinematicCharacterMotor _motor;
     [SerializeField] private Transform _root;
     [SerializeField] private Transform _cameraTarget;
-    [SerializeField] private GrapplingGun _grapplingGun;
 
     [Space]
     [Header("Movement")]
@@ -52,7 +49,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private float _walkResponse = 25f;
     [SerializeField] private float _crouchResponse = 20f;
 
-    [Space]
     [Header("Jump")]
     [SerializeField] private float _jumpSpeed = 20f;
     [SerializeField] private float _coyoteTime = 0.2f;
@@ -60,20 +56,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private float _jumpSustainGravity = 0.4f;
     [SerializeField] private float _gravity = -90f;
 
-    [Space]
-    [Header("Wall Jump")]
-    [SerializeField] private bool _allowWallJump = true;
-    //[SerializeField] private float _wallJumpHorizontalSpeed = 1f;
-    [SerializeField] private float _wallJumpMultiplier = 1f;
-    [SerializeField] private float _wallJumpAcceleration = 0f;
-
-    [Space]
-    [Header("Wall Running")]
-    [SerializeField] private bool _allowWallRunning = true;
-    [SerializeField] private float _wallRunGravity = 0.05f;
-    [SerializeField] private float _wallRunAcceleration = 5f;
-
-    [Space]
     [Header("Sliding")]
     [SerializeField] private float _slideStartSpeed = 25f;
     [SerializeField] private float _slideEndSpeed = 15;
@@ -81,16 +63,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private float _slideSteerAcceleration = 5f;
     [SerializeField] private float _slideGravity = -90f;
 
-    [Space]
-    [Header("Grappling Hook")]
-    [Tooltip("Camera Transform for Grappling")]
-    [SerializeField] private Transform _cameraObject;
-    // Grappling Hook
-    [SerializeField] private LayerMask _whatIsEnemy;
-    //[SerializeField] private LayerMask[] _whatIsGrapple;
-    [SerializeField] private float _maxGrapplingDistance = 20f;
-
-    [Space]
     [Header("Air Control")]
     [SerializeField] private float _airSpeed = 15f;
     [SerializeField] private float _airAcceleration = 70f;
@@ -104,9 +76,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private float _standCameraTargetHeight = 0.9f;
     [Range(0f, 1f)]
     [SerializeField] private float _crouchCameraTargetHeight = 0.7f;
-    #endregion
 
-    #region Code Variables
     private CharacterState _state;
     private CharacterState _lastState;
     private CharacterState _tempState;
@@ -118,31 +88,16 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private bool _requestedSustainJump;
     private bool _requestedCrouch;
     private bool _requestedCrouchInAir;
-    private bool _requestedGrappling;
 
-    // Coyote Jump
     private float _timeSinceUngrounded;
     private float _timeSinceJumpRequest;
     private bool _ungroundedDueToJump;
 
-    // Wall Jump
-    private bool _canWallJump;
-    private Vector3 _wallJumpNormal;
-
-    // Wall Running
-    private bool _canWallRunning;
-
-    // Grappling
-    private bool _isGrappling = false;
-    private GameObject _grappledObj = null;
-
     private Collider[] _uncrouchOverlapResults;
-    #endregion
 
-    #region Debug 
+
     [Header("Debug")]
     public TMP_Text debugText;
-    #endregion
 
     public void Initialize()
     {
@@ -169,22 +124,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         _requestedMovement = Vector3.ClampMagnitude(_requestedMovement, 1f);
         // Orient the input so it's relative to the direction the player is facing
         _requestedMovement = input.Rotation * _requestedMovement;
-
-        // Get Input for Grappling
-        //_requestedGrappling = input.Grappling;
-        //if (_requestedGrappling)
-        //{
-        //    if (!_isGrappling)
-        //    {
-        //        // Start Grappling
-        //        StartGrappling();
-        //    }
-        //    else
-        //    {
-        //        // Stop Grappling
-        //        StopGrappling();
-        //    }
-        //}
 
         var wasRequestingJump = _requestedJump;
         _requestedJump = _requestedJump || input.Jump;
@@ -237,7 +176,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     {
         _state.Acceleration = Vector3.zero;
 
-        #region If player on Ground -> Normal Move, Sliding
+        // If player on Ground
         if (_motor.GroundingStatus.IsStableOnGround)
         {
             _timeSinceUngrounded = 0f;
@@ -251,7 +190,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                 surfaceNormal: _motor.GroundingStatus.GroundNormal
             ) * _requestedMovement.magnitude;
 
-            #region Start Sliding
+            // Start Sliding
             {
                 var moving = groundedMovement.sqrMagnitude > 0f;
                 var crouching = _state.Stance is EStance.Crouch;
@@ -292,9 +231,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                     ) * slideSpeed;
                 }
             }
-            #endregion
 
-            #region Normal Move
+            // Move
             if (_state.Stance is EStance.Stand || _state.Stance is EStance.Crouch)
             {
                 // Calculate the speed and responsiveness of movement based
@@ -314,9 +252,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
                 currentVelocity = moveVelocity;
             }
-            #endregion
-
-            #region Continue sliding
+            // Continue sliding
             else
             {
                 //Friction
@@ -356,33 +292,13 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                 if (currentVelocity.magnitude < _slideEndSpeed)
                     _state.Stance = EStance.Crouch;
             }
-            #endregion
         }
-        #endregion
-
-        #region If player on Wall -> Wall Running
-        else if (_canWallRunning)
-        {
-            Debug.Log("Doing Wall running");
-            // Direction
-            var wallRunDirection = _motor.CharacterForward * _wallRunAcceleration;
-            Debug.DrawRay(transform.position, wallRunDirection, Color.red);
-
-            // Gravity
-            var targetGravity = _wallRunGravity;
-
-            currentVelocity += wallRunDirection * deltaTime;
-            currentVelocity.y = 0;
-            //currentVelocity.y = Mathf.Clamp(currentVelocity.y, -90, 0);
-            _canWallRunning = false;
-        }
-        #endregion
-        #region Character is in air
+        // character is in air
         else
         {
             _timeSinceUngrounded += deltaTime;
 
-            #region Air Move
+            // Air Move
             if (_requestedMovement.sqrMagnitude > 0f)
             {
                 // Requested movement projected onto movement plane (magnitude preserved)
@@ -452,7 +368,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
                 currentVelocity += movementForce;
             }
-            #endregion
 
             //Gravity
             var effectiveGravity = _gravity;
@@ -462,17 +377,14 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
             currentVelocity += _motor.CharacterUp * effectiveGravity * deltaTime;
         }
-        #endregion
 
-        #region Jump & Wall Jump
+        //Jump
         if (_requestedJump)
         {
             var grounded = _motor.GroundingStatus.IsStableOnGround;
             var canCoyoteJump = _timeSinceUngrounded < _coyoteTime && !_ungroundedDueToJump;
 
-            var jumpDirection = _motor.CharacterUp;
-
-            if (grounded || canCoyoteJump || _canWallJump)
+            if (grounded || canCoyoteJump)
             {
                 _requestedJump = false;     //Unset jump request
                 _requestedCrouch = false;   // and request the character uncrouch
@@ -486,22 +398,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                 var currentVerticalSpeed = Vector3.Dot(currentVelocity, _motor.CharacterUp);
                 var targetVerticalSpeed = Mathf.Max(currentVerticalSpeed, _jumpSpeed);
 
-                #region Wall Jump
-                if (_canWallJump)
-                {
-                    Debug.Log("Do Wall Jump");
-                    jumpDirection += _wallJumpNormal * 0.7f;
-
-                    jumpDirection.y *= _wallJumpMultiplier;
-                    jumpDirection += _motor.CharacterForward * _wallJumpAcceleration;
-
-                    // Reset wall jump
-                    _canWallJump = false;
-                }
-                #endregion
-
                 // Add the difference in current and target vertical speed to the character's velocity
-                currentVelocity += jumpDirection * (targetVerticalSpeed - currentVerticalSpeed);
+                currentVelocity += _motor.CharacterUp * (targetVerticalSpeed - currentVerticalSpeed);
             }
             else
             {
@@ -512,7 +410,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                 _requestedJump = canJumpLater;
             }
         }
-        #endregion
     }
     public void UpdateRotation(ref Quaternion currentRotation, float deltaTime)
     {
@@ -535,6 +432,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         if (forward != Vector3.zero)
             currentRotation = Quaternion.LookRotation(forward, _motor.CharacterUp);
     }
+
 
     public void BeforeCharacterUpdate(float deltaTime)
     {
@@ -601,39 +499,12 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         _lastState = _tempState;
     }
 
+
     public void OnGroundHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
-        // Debug.Log("Ground Hit");
     }
     public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
-        // if Allow Wall jump && player is not on stable on ground &&
-        // moving against an obstruction && hitCollider has Wall tag
-        // -> Can Wall Jump
-        if (_allowWallJump && !_motor.GroundingStatus.IsStableOnGround &&
-            !hitStabilityReport.IsStable && hitCollider.gameObject.CompareTag("Wall"))
-        {
-            //Debug.Log("Can wall jump");
-            //Debug.DrawRay(transform.position, hitNormal, Color.magenta);
-            _canWallJump = true;
-            _wallJumpNormal = hitNormal;
-        }
-
-        //if Allow Wall Running && player is not on Stabel on ground &&
-        // moving against an obstruction && hit collider has wall tag
-        // if degree between player forward and wall normal >= 15f
-        // -> Can Wall Running
-        if (_allowWallRunning && !_motor.GroundingStatus.IsStableOnGround &&
-            !hitStabilityReport.IsStable && hitCollider.gameObject.CompareTag("Wall"))
-        {
-            //Debug.Log("Check Wall Run");
-            var anglePlayerToWall = Vector3.Angle(_motor.CharacterForward, hitNormal);
-            if (anglePlayerToWall >= 15)
-            {
-                Debug.Log("Can Wall Run");
-                _canWallRunning = true;
-            }
-        }
     }
     public bool IsColliderValidForCollisions(Collider coll)
     {
@@ -647,41 +518,11 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     {
     }
 
-    #region Grappling
-    private void StartGrappling()
-    {
-
-        //Debug.Log("Try To Grapple");
-        //
-        //// Grappling Hook
-        //RaycastHit hit;
-        //if (Physics.Raycast(_cameraObject.position, _cameraObject.forward, out hit, _maxGrapplingDistance, _whatIsEnemy))
-        //{
-        //    _isGrappling = true;
-        //    //Debug.Log($"{hit.transform.name}");
-        //    _grappledObj = hit.transform.gameObject;
-        //    _grapplingGun.StartGrappling(hit.point);
-        //}
-        //// Grappling Swing
-        //else if(Physics.Raycast(_cameraObject.position, _cameraObject.forward, out hit, _maxGrapplingDistance))
-        //{
-        //    //_isGrappling = true;
-        //    _grappledObj = hit.transform.gameObject;
-        //    Debug.Log("Have to implement Grappling Swing");
-        //}
-    }
-    private void StopGrappling()
-    {
-        //_isGrappling = false;
-        //_grappledObj = null;
-        //_grapplingGun.StopGrappling();
-    }
-    #endregion
-
     public Transform GetCameraTarget()
     {
         return _cameraTarget;
     }
+
     public CharacterState GetState() => _state;
     public CharacterState GetLastState() => _lastState;
 
