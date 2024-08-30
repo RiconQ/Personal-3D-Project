@@ -6,13 +6,17 @@ using UnityEngine.Rendering;
 
 public class Player : MonoBehaviour
 {
+    [Header("Player Movement")]
     [SerializeField] private PlayerCharacter _playerCharacter;
+
+    [Header("Camera")]
     [SerializeField] private PlayerCamera _playerCamera;
 
     [Space]
     [SerializeField] private CameraSpring _cameraSpring;
     [SerializeField] private CameraLean _cameraLean;
 
+    [Header("FX")]
     [Space]
     [SerializeField] private Volume _volume;
     [SerializeField] private StanceVignette _stanceVignette;
@@ -26,7 +30,7 @@ public class Player : MonoBehaviour
         _inputAction = new PlayerInputAction();
         _inputAction.Enable();
 
-        _playerCharacter.Initialize();
+        _playerCharacter.Initialize(_inputAction.Player.Move.ReadValue<Vector2>());
         _playerCamera.Initialize(_playerCharacter.GetCameraTarget());
 
         _cameraSpring.Initialize();
@@ -41,6 +45,8 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
+        //Debug.Log(_inputAction.Player.Move.ReadValue<Vector2>());
+
         var input = _inputAction.Player;
         var deltaTime = Time.deltaTime;
 
@@ -57,7 +63,7 @@ public class Player : MonoBehaviour
             JumpSustain = input.Jump.IsPressed(),
             Crouch      = input.Crouch.WasPressedThisFrame() ?
                             ECrouchInput.Toggle : ECrouchInput.None,
-            Grappling   = input.Grappling.WasPressedThisFrame()
+            //Grappling   = input.Grappling.WasPressedThisFrame()
         };
 
         _playerCharacter.UpdateInput(characterInput);

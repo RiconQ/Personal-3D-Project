@@ -3615,6 +3615,7 @@ GameObject:
   - component: {fileID: 1536441943}
   - component: {fileID: 1536441942}
   - component: {fileID: 1536441941}
+  - component: {fileID: 1536441944}
   m_Layer: 0
   m_Name: Character
   m_TagString: Untagged
@@ -3654,7 +3655,6 @@ MonoBehaviour:
   _motor: {fileID: 1536441942}
   _root: {fileID: 669858147}
   _cameraTarget: {fileID: 115831199}
-  _grapplingGun: {fileID: 1449896800}
   _walkSpeed: 20
   _crouchSpeed: 7
   _walkResponse: 25
@@ -3663,22 +3663,11 @@ MonoBehaviour:
   _coyoteTime: 0.2
   _jumpSustainGravity: 0.4
   _gravity: -90
-  _allowWallJump: 1
-  _wallJumpMultiplier: 1.05
-  _wallJumpAcceleration: 0
-  _allowWallRunning: 1
-  _wallRunGravity: 0.2
-  _wallRunAcceleration: 5
   _slideStartSpeed: 25
   _slideEndSpeed: 15
   _slideFriction: 0.8
   _slideSteerAcceleration: 5
   _slideGravity: 90
-  _cameraObject: {fileID: 73762696}
-  _whatIsEnemy:
-    serializedVersion: 2
-    m_Bits: 256
-  _maxGrapplingDistance: 100
   _airSpeed: 15
   _airAcceleration: 70
   _standHeight: 2
@@ -3752,6 +3741,29 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &1536441944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1536441939}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 032e5e27c8daa2a4a9f8998699f98e4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _playerMovement: {fileID: 1536441941}
+  _motor: {fileID: 1536441942}
+  _whatIsWall:
+    serializedVersion: 2
+    m_Bits: 0
+  _whatIsGround:
+    serializedVersion: 2
+    m_Bits: 0
+  _wallRunSpeed: 30
+  _wallCheckDistance: 0
+  _minJumpHeight: 0
 --- !u!1 &1568271852
 GameObject:
   m_ObjectHideFlags: 0

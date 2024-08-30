@@ -33,6 +33,16 @@ public struct CharacterInput
     public ECrouchInput Crouch;
 }
 
+public struct RequestedInput
+{
+    public Quaternion Rotation;
+    public Vector3 Movement;
+    public bool Jump;
+    public bool SustainJump;
+    public bool Crouch;
+    public bool CrouchInAir;
+}
+
 public class PlayerCharacter : MonoBehaviour, ICharacterController
 {
     [Header("Assignables")]
@@ -48,6 +58,16 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [Space]
     [SerializeField] private float _walkResponse = 25f;
     [SerializeField] private float _crouchResponse = 20f;
+
+    [Header("WallRunning")]
+    [SerializeField] private LayerMask _whatIsWall;
+    [SerializeField] private LayerMask _whatIsGround;
+    [Space]
+    [SerializeField] private float _wallRunSpeed = 30f;
+
+    [Header("Wall Detection")]
+    [SerializeField] private float _wallCheckDistance;
+    [SerializeField] private float _minJumpHeight;
 
     [Header("Jump")]
     [SerializeField] private float _jumpSpeed = 20f;
@@ -81,31 +101,41 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private CharacterState _lastState;
     private CharacterState _tempState;
 
-    // Requested Input
-    private Quaternion _requestedRotation;
-    private Vector3 _requestedMovement;
-    private bool _requestedJump;
-    private bool _requestedSustainJump;
-    private bool _requestedCrouch;
-    private bool _requestedCrouchInAir;
+    // Input
+    private RequestedInput _requestedInput;
+    private Vector2 _moveInput;
 
+    #region Code Variables
+    // Jump
     private float _timeSinceUngrounded;
     private float _timeSinceJumpRequest;
     private bool _ungroundedDueToJump;
 
-    private Collider[] _uncrouchOverlapResults;
+    #region Wall Run
+    // Wall Detection
+    private bool _isWallRight;
+    private bool _isWallLeft;
 
+    // Wall Run
+    private bool _isWallRunning;
+    #endregion
+
+    private Collider[] _uncrouchOverlapResults;
+    #endregion
 
     [Header("Debug")]
     public TMP_Text debugText;
 
-    public void Initialize()
+    public void Initialize(Vector2 moveInput)
     {
         _state.Stance = EStance.Stand;
         _lastState = _state;
         _uncrouchOverlapResults = new Collider[8];
 
         _motor.CharacterController = this;
+        _moveInput = moveInput;
+
+        //
     }
 
     private void Update()
@@ -113,37 +143,40 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         string playerStance = $"Stance : {_state.Stance.ToString()}";
         string isGround = $"Grounded : {_state.Grounded}";
         debugText.text = $"{playerStance}\n{isGround}";
+
     }
 
     public void UpdateInput(CharacterInput input)
     {
-        _requestedRotation = input.Rotation;
+        _requestedInput.Rotation = input.Rotation;
         // Take Vector2 Input -> Create 3D Movement Vector on XZ Plane
-        _requestedMovement = new Vector3(input.Move.x, 0f, input.Move.y);
+        _requestedInput.Movement = new Vector3(input.Move.x, 0f, input.Move.y);
         // Clamp to 1 length
-        _requestedMovement = Vector3.ClampMagnitude(_requestedMovement, 1f);
+        _requestedInput.Movement = Vector3.ClampMagnitude(_requestedInput.Movement, 1f);
         // Orient the input so it's relative to the direction the player is facing
-        _requestedMovement = input.Rotation * _requestedMovement;
+        _requestedInput.Movement = input.Rotation * _requestedInput.Movement;
 
-        var wasRequestingJump = _requestedJump;
-        _requestedJump = _requestedJump || input.Jump;
-        if (_requestedJump && !wasRequestingJump)
+        //Debug.Log(_motor.Velocity);
+
+        var wasRequestingJump = _requestedInput.Jump;
+        _requestedInput.Jump = _requestedInput.Jump || input.Jump;
+        if (_requestedInput.Jump && !wasRequestingJump)
             _timeSinceJumpRequest = 0f;
 
-        _requestedSustainJump = input.JumpSustain;
+        _requestedInput.SustainJump = input.JumpSustain;
 
-        var wasRequestingCrouch = _requestedCrouch;
-        _requestedCrouch = input.Crouch switch
+        var wasRequestingCrouch = _requestedInput.Crouch;
+        _requestedInput.Crouch = input.Crouch switch
         {
-            ECrouchInput.Toggle => !_requestedCrouch,
-            ECrouchInput.None => _requestedCrouch,
-            _ => _requestedCrouch
+            ECrouchInput.Toggle => !_requestedInput.Crouch,
+            ECrouchInput.None => _requestedInput.Crouch,
+            _ => _requestedInput.Crouch
         };
 
-        if (_requestedCrouch && !wasRequestingCrouch)
-            _requestedCrouchInAir = !_state.Grounded;
-        else if (!_requestedCrouch && wasRequestingCrouch)
-            _requestedCrouchInAir = false;
+        if (_requestedInput.Crouch && !wasRequestingCrouch)
+            _requestedInput.CrouchInAir = !_state.Grounded;
+        else if (!_requestedInput.Crouch && wasRequestingCrouch)
+            _requestedInput.CrouchInAir = false;
     }
 
     public void UpdateBody(float deltaTime)
@@ -186,9 +219,9 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             // -> character is walking on Ground
             var groundedMovement = _motor.GetDirectionTangentToSurface
             (
-                direction: _requestedMovement,
+                direction: _requestedInput.Movement,
                 surfaceNormal: _motor.GroundingStatus.GroundNormal
-            ) * _requestedMovement.magnitude;
+            ) * _requestedInput.Movement.magnitude;
 
             // Start Sliding
             {
@@ -217,10 +250,10 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                     }
 
                     var effectiveSlideStartSpeed = _slideStartSpeed;
-                    if (!_lastState.Grounded && !_requestedCrouchInAir)
+                    if (!_lastState.Grounded && !_requestedInput.CrouchInAir)
                     {
                         effectiveSlideStartSpeed = 0f;
-                        _requestedCrouchInAir = false;
+                        _requestedInput.CrouchInAir = false;
                     }
 
                     var slideSpeed = Mathf.Max(effectiveSlideStartSpeed, currentVelocity.magnitude);
@@ -299,14 +332,14 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             _timeSinceUngrounded += deltaTime;
 
             // Air Move
-            if (_requestedMovement.sqrMagnitude > 0f)
+            if (_requestedInput.Movement.sqrMagnitude > 0f)
             {
                 // Requested movement projected onto movement plane (magnitude preserved)
                 var planarMovement = Vector3.ProjectOnPlane
                 (
-                    vector: _requestedMovement,
+                    vector: _requestedInput.Movement,
                     planeNormal: _motor.CharacterUp
-                ) * _requestedMovement.magnitude;
+                ) * _requestedInput.Movement.magnitude;
 
                 // current velocity on movement plane
                 var currentPlanarVelocity = Vector3.ProjectOnPlane
@@ -372,23 +405,23 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             //Gravity
             var effectiveGravity = _gravity;
             var verticalSpeed = Vector3.Dot(currentVelocity, _motor.CharacterUp);
-            if (_requestedSustainJump && verticalSpeed > 0f)
+            if (_requestedInput.SustainJump && verticalSpeed > 0f)
                 effectiveGravity *= _jumpSustainGravity;
 
             currentVelocity += _motor.CharacterUp * effectiveGravity * deltaTime;
         }
 
         //Jump
-        if (_requestedJump)
+        if (_requestedInput.Jump)
         {
             var grounded = _motor.GroundingStatus.IsStableOnGround;
             var canCoyoteJump = _timeSinceUngrounded < _coyoteTime && !_ungroundedDueToJump;
 
             if (grounded || canCoyoteJump)
             {
-                _requestedJump = false;     //Unset jump request
-                _requestedCrouch = false;   // and request the character uncrouch
-                _requestedCrouchInAir = false;
+                _requestedInput.Jump = false;     //Unset jump request
+                _requestedInput.Crouch = false;   // and request the character uncrouch
+                _requestedInput.CrouchInAir = false;
 
                 // Unstick Player from the ground
                 _motor.ForceUnground(time: 0f);
@@ -407,7 +440,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
                 //Defer the jump request until coyote time has passed
                 var canJumpLater = _timeSinceJumpRequest < _coyoteTime;
-                _requestedJump = canJumpLater;
+                _requestedInput.Jump = canJumpLater;
             }
         }
     }
@@ -426,7 +459,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
         var forward = Vector3.ProjectOnPlane
         (
-            _requestedRotation * Vector3.forward, _motor.CharacterUp
+            _requestedInput.Rotation * Vector3.forward, _motor.CharacterUp
         );
 
         if (forward != Vector3.zero)
@@ -439,7 +472,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         _tempState = _state;
 
         // Crocuh
-        if (_requestedCrouch && _state.Stance is EStance.Stand)
+        if (_requestedInput.Crouch && _state.Stance is EStance.Stand)
         {
             _state.Stance = EStance.Crouch;
             _motor.SetCapsuleDimensions
@@ -458,7 +491,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     public void AfterCharacterUpdate(float deltaTime)
     {
         // Uncrouch
-        if (!_requestedCrouch && _state.Stance != EStance.Stand)
+        if (!_requestedInput.Crouch && _state.Stance != EStance.Stand)
         {
             // Tentatively stand up the character capsule
             _motor.SetCapsuleDimensions
@@ -477,7 +510,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             if (_motor.CharacterOverlap(pos, rot, _uncrouchOverlapResults, mask, QueryTriggerInteraction.Ignore) > 0)
             {
                 // Crouch again
-                _requestedCrouch = true;
+                _requestedInput.Crouch = true;
                 _motor.SetCapsuleDimensions
                 (
                     radius: _motor.Capsule.radius,
@@ -505,6 +538,18 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     }
     public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
+        #region Wall Running
+        // CheckForWall
+        CheckForWall(hitCollider, hitNormal, hitPoint, ref hitStabilityReport);
+
+
+        if ((_isWallLeft || _isWallRight) && _moveInput.y > 0 && AboveGound())
+        {
+
+        }
+
+
+        #endregion
     }
     public bool IsColliderValidForCollisions(Collider coll)
     {
@@ -534,4 +579,31 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             _motor.BaseVelocity = Vector3.zero;
         }
     }
+
+    #region Check For Wall
+    private void CheckForWall(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
+    {
+        var crossProduct = Vector3.Cross(_motor.CharacterForward, hitNormal);
+
+        if (crossProduct.y > 0)
+        {
+            _isWallRight = false;
+            _isWallLeft = true;
+        }
+        else if (crossProduct.y < 0)
+        {
+            _isWallRight = true;
+            _isWallLeft = false;
+        }
+    }
+
+    /// <summary>
+    /// Check Is Player is not StableGround
+    /// </summary>
+    /// <returns></returns>
+    private bool AboveGound()
+    {
+        return !_motor.GroundingStatus.IsStableOnGround;
+    }
+    #endregion
 }
