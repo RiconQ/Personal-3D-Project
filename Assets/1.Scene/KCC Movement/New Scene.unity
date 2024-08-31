@@ -1616,7 +1616,7 @@ GameObject:
   - component: {fileID: 526080377}
   - component: {fileID: 526080376}
   - component: {fileID: 526080375}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Cube
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -1826,7 +1826,7 @@ GameObject:
   - component: {fileID: 582573045}
   - component: {fileID: 582573044}
   - component: {fileID: 582573043}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Cylinder
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -2223,7 +2223,7 @@ GameObject:
   - component: {fileID: 781636902}
   - component: {fileID: 781636901}
   - component: {fileID: 781636900}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Cube (1)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -2548,7 +2548,7 @@ GameObject:
   - component: {fileID: 986456493}
   - component: {fileID: 986456492}
   - component: {fileID: 986456491}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Cube (6)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -2706,7 +2706,7 @@ GameObject:
   - component: {fileID: 1233482363}
   - component: {fileID: 1233482362}
   - component: {fileID: 1233482361}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Cube (4)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -3117,7 +3117,7 @@ GameObject:
   - component: {fileID: 1371293458}
   - component: {fileID: 1371293457}
   - component: {fileID: 1371293456}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Cube (7)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -3332,7 +3332,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1449896799
 Transform:
   m_ObjectHideFlags: 0
@@ -3510,7 +3510,7 @@ GameObject:
   - component: {fileID: 1501346421}
   - component: {fileID: 1501346420}
   - component: {fileID: 1501346419}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Cube (8)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -3659,6 +3659,17 @@ MonoBehaviour:
   _crouchSpeed: 7
   _walkResponse: 25
   _crouchResponse: 20
+  _whatIsWall:
+    serializedVersion: 2
+    m_Bits: 512
+  _whatIsGround:
+    serializedVersion: 2
+    m_Bits: 128
+  _wallRunSpeed: 30
+  _wallJumpForce: 7
+  _wallSideJumpForce: 12
+  _exitWallTime: 0.2
+  _wallCheckDistance: 1
   _jumpSpeed: 20
   _coyoteTime: 0.2
   _jumpSustainGravity: 0.4
@@ -4633,7 +4644,7 @@ GameObject:
   - component: {fileID: 1972826506}
   - component: {fileID: 1972826505}
   - component: {fileID: 1972826504}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Cube (5)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -4851,7 +4862,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 439
+    m_Bits: 951
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0

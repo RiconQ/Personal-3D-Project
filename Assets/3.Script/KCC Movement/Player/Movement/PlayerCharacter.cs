@@ -45,6 +45,8 @@ public struct RequestedInput
 
 public class PlayerCharacter : MonoBehaviour, ICharacterController
 {
+    #region Variables
+
     [Header("Assignables")]
     [SerializeField] private KinematicCharacterMotor _motor;
     [SerializeField] private Transform _root;
@@ -59,15 +61,19 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private float _walkResponse = 25f;
     [SerializeField] private float _crouchResponse = 20f;
 
-    [Header("WallRunning")]
+    [Header("Wall Running")]
     [SerializeField] private LayerMask _whatIsWall;
     [SerializeField] private LayerMask _whatIsGround;
     [Space]
     [SerializeField] private float _wallRunSpeed = 30f;
+    [SerializeField] private float _wallJumpForce = 10f;
+    [SerializeField] private float _wallSideJumpForce = 10f;
+    [Space]
+    [SerializeField] private float _exitWallTime = 0.2f;
 
     [Header("Wall Detection")]
-    [SerializeField] private float _wallCheckDistance;
-    [SerializeField] private float _minJumpHeight;
+    [SerializeField] private float _wallCheckDistance = 3f;
+    //[SerializeField] private float _minJumpHeight = 0.5f;
 
     [Header("Jump")]
     [SerializeField] private float _jumpSpeed = 20f;
@@ -113,11 +119,15 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     #region Wall Run
     // Wall Detection
+    private RaycastHit _rightWallHit;
+    private RaycastHit _leftWallHit;
     private bool _isWallRight;
     private bool _isWallLeft;
 
     // Wall Run
     private bool _isWallRunning;
+    private bool _isExitingWall;
+    private float _exitWallTimer;
     #endregion
 
     private Collider[] _uncrouchOverlapResults;
@@ -126,28 +136,54 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [Header("Debug")]
     public TMP_Text debugText;
 
-    public void Initialize(Vector2 moveInput)
+    #endregion
+
+    public void Initialize()
     {
         _state.Stance = EStance.Stand;
         _lastState = _state;
         _uncrouchOverlapResults = new Collider[8];
 
         _motor.CharacterController = this;
-        _moveInput = moveInput;
 
-        //
+        ResetVariables();
+    }
+
+    private void ResetVariables()
+    {
+        //reset wallRun var
+        _isWallLeft = false;
+        _isWallRight = false;
+        _isWallRunning = false;
+        _isExitingWall = false;
     }
 
     private void Update()
     {
-        string playerStance = $"Stance : {_state.Stance.ToString()}";
-        string isGround = $"Grounded : {_state.Grounded}";
-        debugText.text = $"{playerStance}\n{isGround}";
+        if (Input.GetKeyDown(KeyCode.Slash))
+            debugText.gameObject.SetActive(!debugText.gameObject.activeSelf);
+        //Debug
+        string debugLog =
+            $"Stance : {_state.Stance.ToString()}\n" +
+            $"Grounded : {_state.Grounded}\n" +
+            $"isWallRight : {_isWallRight}\n" +
+            $"isWallLeft : {_isWallLeft}\n" +
+            $"";
+
+        debugText.text = $"{debugLog}";
+
+
+
+
+        CheckForWall();
+        WallRunState();
 
     }
 
-    public void UpdateInput(CharacterInput input)
+    public void UpdateInput(CharacterInput input, Vector2 moveInput)
     {
+        _moveInput = moveInput;
+
         _requestedInput.Rotation = input.Rotation;
         // Take Vector2 Input -> Create 3D Movement Vector on XZ Plane
         _requestedInput.Movement = new Vector3(input.Move.x, 0f, input.Move.y);
@@ -329,86 +365,94 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         // character is in air
         else
         {
-            _timeSinceUngrounded += deltaTime;
-
-            // Air Move
-            if (_requestedInput.Movement.sqrMagnitude > 0f)
+            if (_isWallRunning)
             {
-                // Requested movement projected onto movement plane (magnitude preserved)
-                var planarMovement = Vector3.ProjectOnPlane
-                (
-                    vector: _requestedInput.Movement,
-                    planeNormal: _motor.CharacterUp
-                ) * _requestedInput.Movement.magnitude;
-
-                // current velocity on movement plane
-                var currentPlanarVelocity = Vector3.ProjectOnPlane
-                (
-                    vector: currentVelocity,
-                    planeNormal: _motor.CharacterUp
-                );
-
-                //Calculate movement force;
-                // Will be changed depending on current velocity
-                var movementForce = planarMovement * _airAcceleration * deltaTime;
-
-                // if moving slower than the max air speed, treat movementForce as a simple steering force
-                if (currentPlanarVelocity.magnitude < _airSpeed)
-                {
-                    //Add it to the current planer velocity for a target velocity
-                    var targetPlanerVelocity = currentPlanarVelocity + movementForce;
-
-                    //Limit target velocity to air speed
-                    targetPlanerVelocity = Vector3.ClampMagnitude(targetPlanerVelocity, _airSpeed);
-
-                    //Steer toward current velocity
-                    movementForce = targetPlanerVelocity - currentPlanarVelocity;
-                }
-                //Otherwise, nerf the movementForce when it is in the direction of the current planer velocity
-                //to prevent accelerating further beyond the max air speed
-                else if (Vector3.Dot(currentPlanarVelocity, movementForce) > 0f)
-                {
-                    //Project movement force onto the plane whose normal is the current planar velocity
-                    var constrainedMovementForce = Vector3.ProjectOnPlane
-                    (
-                        vector: movementForce,
-                        planeNormal: currentPlanarVelocity.normalized
-                    );
-                    movementForce = constrainedMovementForce;
-                }
-
-                //Prevent air-climbing steep slope
-                if (_motor.GroundingStatus.FoundAnyGround)
-                {
-                    //if moving in the same direction as the resultant velocity
-                    if (Vector3.Dot(movementForce, currentVelocity + movementForce) > 0f)
-                    {
-                        //Calculate Obstruction normal
-                        var obstructionNormal = Vector3.Cross
-                        (
-                            _motor.CharacterUp,
-                            Vector3.Cross
-                            (
-                                _motor.CharacterUp,
-                                _motor.GroundingStatus.GroundNormal
-                            )
-                        ).normalized;
-
-                        // project movement force onto obstruction plane
-                        movementForce = Vector3.ProjectOnPlane(movementForce, obstructionNormal);
-                    }
-                }
-
-                currentVelocity += movementForce;
+                WallRunningMovement(ref currentVelocity, deltaTime);
             }
 
-            //Gravity
-            var effectiveGravity = _gravity;
-            var verticalSpeed = Vector3.Dot(currentVelocity, _motor.CharacterUp);
-            if (_requestedInput.SustainJump && verticalSpeed > 0f)
-                effectiveGravity *= _jumpSustainGravity;
+            else
+            {
+                _timeSinceUngrounded += deltaTime;
 
-            currentVelocity += _motor.CharacterUp * effectiveGravity * deltaTime;
+                // Air Move
+                if (_requestedInput.Movement.sqrMagnitude > 0f)
+                {
+                    // Requested movement projected onto movement plane (magnitude preserved)
+                    var planarMovement = Vector3.ProjectOnPlane
+                    (
+                        vector: _requestedInput.Movement,
+                        planeNormal: _motor.CharacterUp
+                    ) * _requestedInput.Movement.magnitude;
+
+                    // current velocity on movement plane
+                    var currentPlanarVelocity = Vector3.ProjectOnPlane
+                    (
+                        vector: currentVelocity,
+                        planeNormal: _motor.CharacterUp
+                    );
+
+                    //Calculate movement force;
+                    // Will be changed depending on current velocity
+                    var movementForce = planarMovement * _airAcceleration * deltaTime;
+
+                    // if moving slower than the max air speed, treat movementForce as a simple steering force
+                    if (currentPlanarVelocity.magnitude < _airSpeed)
+                    {
+                        //Add it to the current planer velocity for a target velocity
+                        var targetPlanerVelocity = currentPlanarVelocity + movementForce;
+
+                        //Limit target velocity to air speed
+                        targetPlanerVelocity = Vector3.ClampMagnitude(targetPlanerVelocity, _airSpeed);
+
+                        //Steer toward current velocity
+                        movementForce = targetPlanerVelocity - currentPlanarVelocity;
+                    }
+                    //Otherwise, nerf the movementForce when it is in the direction of the current planer velocity
+                    //to prevent accelerating further beyond the max air speed
+                    else if (Vector3.Dot(currentPlanarVelocity, movementForce) > 0f)
+                    {
+                        //Project movement force onto the plane whose normal is the current planar velocity
+                        var constrainedMovementForce = Vector3.ProjectOnPlane
+                        (
+                            vector: movementForce,
+                            planeNormal: currentPlanarVelocity.normalized
+                        );
+                        movementForce = constrainedMovementForce;
+                    }
+
+                    //Prevent air-climbing steep slope
+                    if (_motor.GroundingStatus.FoundAnyGround)
+                    {
+                        //if moving in the same direction as the resultant velocity
+                        if (Vector3.Dot(movementForce, currentVelocity + movementForce) > 0f)
+                        {
+                            //Calculate Obstruction normal
+                            var obstructionNormal = Vector3.Cross
+                            (
+                                _motor.CharacterUp,
+                                Vector3.Cross
+                                (
+                                    _motor.CharacterUp,
+                                    _motor.GroundingStatus.GroundNormal
+                                )
+                            ).normalized;
+
+                            // project movement force onto obstruction plane
+                            movementForce = Vector3.ProjectOnPlane(movementForce, obstructionNormal);
+                        }
+                    }
+
+                    currentVelocity += movementForce;
+                }
+
+                //Gravity
+                var effectiveGravity = _gravity;
+                var verticalSpeed = Vector3.Dot(currentVelocity, _motor.CharacterUp);
+                if (_requestedInput.SustainJump && verticalSpeed > 0f)
+                    effectiveGravity *= _jumpSustainGravity;
+
+                currentVelocity += _motor.CharacterUp * effectiveGravity * deltaTime;
+            }
         }
 
         //Jump
@@ -416,6 +460,14 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         {
             var grounded = _motor.GroundingStatus.IsStableOnGround;
             var canCoyoteJump = _timeSinceUngrounded < _coyoteTime && !_ungroundedDueToJump;
+
+            //if (_isWallRunning)
+            //{
+            //    _requestedInput.Jump = false;     //Unset jump request
+            //    _requestedInput.Crouch = false;   // and request the character uncrouch
+            //    _requestedInput.CrouchInAir = false;
+            //    WallJump(ref currentVelocity, deltaTime);
+            //}
 
             if (grounded || canCoyoteJump)
             {
@@ -538,18 +590,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     }
     public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
-        #region Wall Running
-        // CheckForWall
-        CheckForWall(hitCollider, hitNormal, hitPoint, ref hitStabilityReport);
-
-
-        if ((_isWallLeft || _isWallRight) && _moveInput.y > 0 && AboveGound())
-        {
-
-        }
-
-
-        #endregion
     }
     public bool IsColliderValidForCollisions(Collider coll)
     {
@@ -580,21 +620,59 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         }
     }
 
-    #region Check For Wall
-    private void CheckForWall(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
-    {
-        var crossProduct = Vector3.Cross(_motor.CharacterForward, hitNormal);
+    #region Wall Run
 
-        if (crossProduct.y > 0)
+    private void WallRunState()
+    {
+        if ((_isWallLeft || _isWallRight) && _moveInput.y > 0 && AboveGound() && !_isExitingWall)
         {
-            _isWallRight = false;
-            _isWallLeft = true;
+            if (!_isWallRunning)
+            {
+                StartWallRun();
+            }
         }
-        else if (crossProduct.y < 0)
+        //else if (_isExitingWall)
+        //{
+        //    if (_isWallRunning)
+        //        StopWallRun();
+        //
+        //    if (_exitWallTimer > 0)
+        //        _exitWallTimer -= Time.deltaTime;
+        //
+        //    if (_exitWallTimer <= 0)
+        //        _isExitingWall = false;
+        //}
+        else
         {
-            _isWallRight = true;
-            _isWallLeft = false;
+            if (_isWallRunning)
+                StopWallRun();
         }
+    }
+
+    /// <summary>
+    /// Check Wall is left or right
+    /// </summary>
+    private void CheckForWall()
+    {
+
+        //Debug.Log("CheckWall");
+        _isWallRight = Physics.Raycast(transform.position, transform.right, out _rightWallHit, _wallCheckDistance, _whatIsWall);
+        _isWallLeft = Physics.Raycast(transform.position, -transform.right, out _leftWallHit, _wallCheckDistance, _whatIsWall);
+
+        /*
+        //var crossProduct = Vector3.Cross(_motor.CharacterForward, hitNormal);
+        
+        //if (crossProduct.y > 0)
+        //{
+        //    _isWallRight = false;
+        //    _isWallLeft = true;
+        //}
+        //else if (crossProduct.y < 0)
+        //{
+        //    _isWallRight = true;
+        //    _isWallLeft = false;
+        //}
+        */
     }
 
     /// <summary>
@@ -604,6 +682,59 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private bool AboveGound()
     {
         return !_motor.GroundingStatus.IsStableOnGround;
+    }
+
+    private void StartWallRun()
+    {
+        //Debug.Log("Start WallRun");
+        _isWallRunning = true;
+
+        // Change Fov
+        // Do Tilt
+    }
+
+    private void WallRunningMovement(ref Vector3 currentVelocity, float deltaTime)
+    {
+        var wallNoramal = _isWallRight ? _rightWallHit.normal : _leftWallHit.normal;
+        var wallForward = Vector3.Cross(wallNoramal, transform.up);
+
+        // Modify Wall Forward to correct direction
+        if ((transform.forward - wallForward).magnitude > (transform.forward - -wallForward).magnitude)
+            wallForward = -wallForward;
+
+        currentVelocity = wallForward * _wallRunSpeed;
+
+        // Add Velocity for Stick on wall
+        //if (!(_isWallLeft && _moveInput.x > 0) && !(_isWallRight && _moveInput.x < 0))
+        //    currentVelocity += -wallNoramal * 100;
+    }
+
+    private void WallJump(ref Vector3 currentVelocity, float deltaTime)
+    {
+        _isExitingWall = true;
+        _exitWallTimer = _exitWallTime;
+
+        Vector3 wallNormal = _isWallRight ? _rightWallHit.normal : _leftWallHit.normal;
+        Vector3 forceToApply = _motor.CharacterUp * _wallJumpForce + wallNormal * _wallSideJumpForce;
+
+        //test
+        // Unstick Player from the ground
+        _motor.ForceUnground(time: 0f);
+        _ungroundedDueToJump = true;
+
+        // Set Minimum Vertical Speed to the Jump Speed
+        var currentVerticalSpeed = Vector3.Dot(currentVelocity, _motor.CharacterUp);
+        var targetVerticalSpeed = Mathf.Max(currentVerticalSpeed, _wallJumpForce);
+
+        // Add the difference in current and target vertical speed to the character's velocity
+        currentVelocity += forceToApply * (targetVerticalSpeed - currentVerticalSpeed);
+    }
+    private void StopWallRun()
+    {
+        _isWallRunning = false;
+
+        //Change FOv
+        // reset Tilt
     }
     #endregion
 }

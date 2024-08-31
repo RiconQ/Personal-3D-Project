@@ -30,7 +30,7 @@ public class Player : MonoBehaviour
         _inputAction = new PlayerInputAction();
         _inputAction.Enable();
 
-        _playerCharacter.Initialize(_inputAction.Player.Move.ReadValue<Vector2>());
+        _playerCharacter.Initialize();
         _playerCamera.Initialize(_playerCharacter.GetCameraTarget());
 
         _cameraSpring.Initialize();
@@ -66,7 +66,7 @@ public class Player : MonoBehaviour
             //Grappling   = input.Grappling.WasPressedThisFrame()
         };
 
-        _playerCharacter.UpdateInput(characterInput);
+        _playerCharacter.UpdateInput(characterInput, _inputAction.Player.Move.ReadValue<Vector2>());
 
         _playerCharacter.UpdateBody(deltaTime);
 
