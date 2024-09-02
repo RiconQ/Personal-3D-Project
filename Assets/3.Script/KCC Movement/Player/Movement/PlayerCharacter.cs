@@ -2,6 +2,7 @@ using KinematicCharacterController;
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public enum ECrouchInput
 {
@@ -76,9 +77,22 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private bool _useWallCounterForce = true;
     [SerializeField] private float _wallCounterForce = 10f;
 
-    [Header("Wall Detection")]
-    [SerializeField] private float _wallCheckDistance = 3f;
-    //[SerializeField] private float _minJumpHeight = 0.5f;
+    [Header("Wall Climb, Wall Climb Jump")]
+    [SerializeField] private float _climbSpeed = 10f;
+    [SerializeField] private float _maxClimbTime = 2.5f;
+    [Space]
+    [SerializeField] private float _climbJumpUpForce = 10f;
+    [SerializeField] private float _climbJumpBackForce = 10f;
+
+    [Header("Wall Detection - Wall Run")]
+    [SerializeField] private float _wallRunDetectionDistance = 1f;
+
+    [Header("Wall Detection - Wall Climb")]
+    [SerializeField] private float _wallClimbDetectionDistance = 1f;
+    [SerializeField] private float _sphereCastRadius = 1f;
+    [SerializeField] private float _maxWallLockAngle = 30f;
+    [SerializeField] private float _minWallNormalAngleChange = 5f;
+
 
     [Header("Jump")]
     [SerializeField] private float _jumpSpeed = 20f;
@@ -135,6 +149,23 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private float _exitWallTimer;
     #endregion
 
+    #region Wall Climb
+    // Wall Detection
+    private float _wallLockAngle;
+
+    private GameObject _lastWall;
+    private Vector3 _lastWallNormal;
+
+    private RaycastHit _frontWallHit;
+    private bool _isWallFront;
+
+    // Wall Climb
+    private float _climbTimer;
+    private bool _isClimbing;
+
+
+    #endregion
+
     private Collider[] _uncrouchOverlapResults;
     #endregion
 
@@ -177,12 +208,11 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
         debugText.text = $"{debugLog}";
 
-
-
-
-        CheckForWall();
+        WallRunCheck();
         WallRunState();
 
+        WallClimbCheck();
+        WallClimbState();
     }
 
     public void UpdateInput(CharacterInput input, Vector2 moveInput)
@@ -253,6 +283,11 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         // If player on Ground
         if (_motor.GroundingStatus.IsStableOnGround)
         {
+            if (_isClimbing)
+            {
+                //Debug.Log("Ground WallClimb");
+                ClimbingMovement(ref currentVelocity, deltaTime);
+            }
             _timeSinceUngrounded = 0f;
             _ungroundedDueToJump = false;
 
@@ -374,7 +409,11 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             {
                 WallRunningMovement(ref currentVelocity, deltaTime);
             }
-
+            else if (_isClimbing)
+            {
+                //Debug.Log("Air WallClimb");
+                ClimbingMovement(ref currentVelocity, deltaTime);
+            }
             else
             {
                 _timeSinceUngrounded += deltaTime;
@@ -472,6 +511,14 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                 _requestedInput.Crouch = false;   // and request the character uncrouch
                 _requestedInput.CrouchInAir = false;
                 WallJump(ref currentVelocity, deltaTime);
+            }
+
+            if(_isClimbing)
+            {
+                _requestedInput.Jump = false;     //Unset jump request
+                _requestedInput.Crouch = false;   // and request the character uncrouch
+                _requestedInput.CrouchInAir = false;
+                ClimbJump(ref currentVelocity, deltaTime);
             }
 
             if (grounded || canCoyoteJump)
@@ -640,10 +687,10 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         {
             if (_isWallRunning)
                 StopWallRun();
-        
+
             if (_exitWallTimer > 0)
                 _exitWallTimer -= Time.deltaTime;
-        
+
             if (_exitWallTimer <= 0)
                 _isExitingWall = false;
         }
@@ -657,12 +704,12 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     /// <summary>
     /// Check Wall is left or right
     /// </summary>
-    private void CheckForWall()
+    private void WallRunCheck()
     {
 
         //Debug.Log("CheckWall");
-        _isWallRight = Physics.Raycast(transform.position, transform.right, out _rightWallHit, _wallCheckDistance, _whatIsWall);
-        _isWallLeft = Physics.Raycast(transform.position, -transform.right, out _leftWallHit, _wallCheckDistance, _whatIsWall);
+        _isWallRight = Physics.Raycast(transform.position, transform.right, out _rightWallHit, _wallRunDetectionDistance, _whatIsWall);
+        _isWallLeft = Physics.Raycast(transform.position, -transform.right, out _leftWallHit, _wallRunDetectionDistance, _whatIsWall);
 
         /*
         //var crossProduct = Vector3.Cross(_motor.CharacterForward, hitNormal);
@@ -718,11 +765,11 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             if (!(_isWallLeft && _moveInput.x > 0) && !(_isWallRight && _moveInput.x < 0))
                 currentVelocity += -wallNoramal * _wallCounterForce;
         }
+        currentVelocity.y = 0f;
     }
 
     private void WallJump(ref Vector3 currentVelocity, float deltaTime)
     {
-        Debug.Log("Wall Jump");
         _isExitingWall = true;
         _exitWallTimer = _exitWallTime;
 
@@ -749,6 +796,103 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         _playerCamera.DoFov(80f);
         //reset Tilt
         _playerCamera.DoTilt(0f);
+    }
+    #endregion
+
+    #region Wall Climb, Climb Jump
+    private void WallClimbCheck()
+    {
+        //_isWallFront = Physics.SphereCast(transform.position, _sphereCastRadius, transform.forward, out _frontWallHit, _wallClimbDetectionDistance, _whatIsWall);
+        _isWallFront = Physics.Raycast(transform.position, transform.forward, out _frontWallHit, _wallClimbDetectionDistance, _whatIsWall);
+        //Debug.Log(_isWallFront);
+        _wallLockAngle = Vector3.Angle(transform.forward, -_frontWallHit.normal);
+
+        bool newWall = _frontWallHit.transform != _lastWall ||
+            Math.Abs(Vector3.Angle(_lastWallNormal, _frontWallHit.normal)) > _minWallNormalAngleChange;
+
+        if ((_isWallFront && newWall) || !AboveGound())
+        {
+            _climbTimer = _maxClimbTime;
+            //Set Max Jump Count
+        }
+    }
+
+    private void WallClimbState()
+    {
+        if ((_isWallFront && (_moveInput.y > 0)) && _wallLockAngle < _maxWallLockAngle && !_isExitingWall)
+        {
+            if (!_isClimbing && _climbTimer > 0) StartClimbing();
+
+            if (_climbTimer > 0)
+                _climbTimer -= Time.deltaTime;
+            if (_climbTimer < 0)
+                StopClimbing();
+        }
+        else if (_isExitingWall)
+        {
+            if (_isClimbing)
+                StopClimbing();
+
+            if (_exitWallTimer > 0)
+                _exitWallTimer -= Time.deltaTime;
+            if (_exitWallTimer < 0)
+                _isExitingWall = false;
+        }
+        else
+        {
+            if (_isClimbing)
+            {
+                //Debug.Log($"wall Front : {_isWallFront}");
+                //Debug.Log($"move : {(_moveInput.y > 0)}");
+                StopClimbing();
+            }
+        }
+    }
+
+    private void StartClimbing()
+    {
+        //Debug.Log("Start Climbing");
+        _isClimbing = true;
+
+        _lastWall = _frontWallHit.transform.gameObject;
+        _lastWallNormal = _frontWallHit.normal;
+    }
+
+    private void ClimbingMovement(ref Vector3 currentVelocity, float deltaTime)
+    {
+
+        currentVelocity = new Vector3(0, _climbSpeed, _motor.Velocity.z);
+    }
+
+    private void StopClimbing()
+    {
+        //Debug.Log("Stop Climbing");
+        _isClimbing = false;
+    }
+
+    private void ClimbJump(ref Vector3 currentVelocity, float deltaTime)
+    {
+        _isExitingWall = true;
+        _exitWallTimer = _exitWallTime;
+
+        // jump Force to Apply
+
+        Vector3 forceToApply = transform.up * _climbJumpUpForce +
+            _frontWallHit.normal * _climbJumpBackForce;
+
+        currentVelocity = new Vector3(_motor.Velocity.x, 0f, _motor.Velocity.z);
+
+        //test
+        // Unstick Player from the ground
+        _motor.ForceUnground(time: 0f);
+        _ungroundedDueToJump = true;
+
+        // Set Minimum Vertical Speed to the Jump Speed
+        var currentVerticalSpeed = Vector3.Dot(currentVelocity, _motor.CharacterUp);
+        var targetVerticalSpeed = Mathf.Max(currentVerticalSpeed, _wallJumpForce);
+
+        // Add the difference in current and target vertical speed to the character's velocity
+        currentVelocity += forceToApply * (targetVerticalSpeed - currentVerticalSpeed);
     }
     #endregion
 }

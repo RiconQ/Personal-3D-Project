@@ -38,7 +38,7 @@ public class PlayerCamera : MonoBehaviour
 
     public void DoFov(float endValue)
     {
-        _mainCamera.DOFieldOfView(endValue, 0f);
+        _mainCamera.DOFieldOfView(endValue, 0.25f);
     }
 
     public void DoTilt(float zTilt)
