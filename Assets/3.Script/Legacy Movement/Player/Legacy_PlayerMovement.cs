@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public enum EMovementState
 {
+    Freeze,
     Walking,
     Sprinting,
     Crouching,
@@ -70,6 +72,11 @@ public class Legacy_PlayerMovement : MonoBehaviour
     public bool isSliding;
     public bool wallRunning;
     public bool isClimbing;
+    public bool isFreeze;
+    public bool activeGrapple = false;
+
+    private bool enableMovementOnNextTouch;
+
 
     [Header("Reference")]
     public Legacy_Climbing _climbingScript;
@@ -94,7 +101,7 @@ public class Legacy_PlayerMovement : MonoBehaviour
         StateHandler();
 
         //handle drag
-        if (grounded)
+        if (grounded && !activeGrapple)
             _rb.drag = groundDrag;
         else
             _rb.drag = 0;
@@ -137,6 +144,8 @@ public class Legacy_PlayerMovement : MonoBehaviour
 
     private void MovePlayer()
     {
+        if (activeGrapple) return;
+
         if (_climbingScript.exitingWall) return;
         _moveDirection = orientation.forward * _verticalInput + orientation.right * _horizontalInput;
 
@@ -167,6 +176,8 @@ public class Legacy_PlayerMovement : MonoBehaviour
 
     private void SpeedControl()
     {
+        if (activeGrapple) return;
+
         if (OnSlope() && !_exitingSlope)
         {
             if (_rb.velocity.magnitude > _moveSpeed)
@@ -202,7 +213,14 @@ public class Legacy_PlayerMovement : MonoBehaviour
 
     private void StateHandler()
     {
-        if(isClimbing)
+        if (isFreeze)
+        {
+            state = EMovementState.Freeze;
+            _moveSpeed = 0f;
+            _rb.velocity = Vector3.zero;
+        }
+
+        if (isClimbing)
         {
             state = EMovementState.Climbing;
             _desiredMoveSpeed = climbSpeed;
@@ -311,5 +329,53 @@ public class Legacy_PlayerMovement : MonoBehaviour
     public Vector3 GetSlopeMoveDirection(Vector3 direction)
     {
         return Vector3.ProjectOnPlane(direction, _slopeHit.normal).normalized;
+    }
+
+    public void JumpToPosition(Vector3 targetPosition, float trajectoryHeight)
+    {
+        activeGrapple = true;
+
+        velocityToSet = CalculateJumpVelocity(transform.position, targetPosition, trajectoryHeight);
+        Invoke(nameof(SetVelocity), 0.1f);
+
+        Invoke(nameof(ResetRestrictions), 3f);
+    }
+
+    private Vector3 velocityToSet;
+
+    private void SetVelocity()
+    {
+        enableMovementOnNextTouch = true;
+        _rb.velocity = velocityToSet;
+    }
+
+    public void ResetRestrictions()
+    {
+        activeGrapple = false;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(enableMovementOnNextTouch)
+        {
+            enableMovementOnNextTouch = false;
+            ResetRestrictions();
+
+            GetComponent<Legacy_GrapplingHook>().StopGrapple();
+        }
+    }
+
+    public Vector3 CalculateJumpVelocity(Vector3 startPoint, Vector3 endPoint, float trajectoryHeight)
+    {
+        float gravity = Physics.gravity.y;
+        float displacementY = endPoint.y - startPoint.y;
+        Vector3 displacementXZ =
+            new Vector3(endPoint.x - startPoint.x, 0f, endPoint.z - startPoint.z); ;
+
+        Vector3 velocityY = Vector3.up * Mathf.Sqrt(-2 * gravity * trajectoryHeight);
+        Vector3 velocityXZ = displacementXZ / (Mathf.Sqrt(-2 * trajectoryHeight / gravity)
+            + Mathf.Sqrt(2 * (displacementY - trajectoryHeight) / gravity));
+
+        return velocityXZ + velocityY;
     }
 }

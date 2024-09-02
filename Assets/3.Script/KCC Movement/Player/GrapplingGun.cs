@@ -5,54 +5,52 @@ using UnityEngine;
 [RequireComponent(typeof(LineRenderer))]
 public class GrapplingGun : MonoBehaviour
 {
-    [Header("Assign")]
-    [SerializeField] private Transform _gunTip; // Transform where grappling start
-    [SerializeField] private GameObject _gunObject; // grappling gun object
+    [Header("Reference")]
+    [SerializeField] private PlayerCharacter _playerMovement;
+    [SerializeField] private Transform _cameraTransform;
+    [SerializeField] private Transform _gunTip;
+    [SerializeField] private LayerMask _whatIsGrapple;
+    [SerializeField] private LineRenderer _lr;
 
-    private LineRenderer _lineRenderer;
+    [Header("Grappling")]
+    [SerializeField] private float _maxGrappleDistance;
+    [SerializeField] private float _grappleDelayTime;
+    [SerializeField] private float _overshootYAxis;
 
+    [Header("CoolDown")]
+    [SerializeField] private float _grappleCooldown;
+
+    // Variables
     private Vector3 _grapplePoint;
-    private Vector3 _currentGrapplePosition;
-    private bool _isGrappling =false;
+    private float _grappleCooldownTimer;
+    private bool _isGrappling;
 
     private void Start()
     {
-        _lineRenderer = GetComponent<LineRenderer>();    
+        _playerMovement = GetComponent<PlayerCharacter>();
+        _lr.enabled = false;
+    }
+
+    private void Update()
+    {
+        if(_grappleCooldownTimer > 0)
+            _grappleCooldownTimer -= Time.deltaTime;
     }
 
     private void LateUpdate()
     {
-        DrawRope();
+        if (_isGrappling)
+            _lr.SetPosition(0, _gunTip.position);
     }
 
-    public void StartGrappling(Vector3 targetPoint)
+    private void StartGrapple()
     {
-        Debug.Log("Start Grappling");
+        if (_grappleCooldownTimer > 0) return;
+
         _isGrappling = true;
+        //_playerMovement.isFreeze = true;
 
-        //Debug.DrawLine(_gunTip.position, targetPoint);
-        //_currentGrapplePosition = _gunTip.position;
-        _grapplePoint = targetPoint;
-        
-        _lineRenderer.positionCount = 2;
-    }
-
-    public void DrawRope()
-    {
-        if (!_isGrappling) return;
-
-        //_currentGrapplePosition = Vector3.Lerp(_currentGrapplePosition, _grapplePoint, Time.deltaTime);
-
-        //Draw Grappling when _isGrappling == true
-        _lineRenderer.SetPosition(0, _gunTip.position);
-        _lineRenderer.SetPosition(1, _grapplePoint);
-    }
-
-    public void StopGrappling()
-    {
-        Debug.Log("Stop Grappling");
-        _isGrappling = false;
-
-        _lineRenderer.positionCount = 0;
+        RaycastHit hit;
+        //if(Physics.Raycast(_))
     }
 }
