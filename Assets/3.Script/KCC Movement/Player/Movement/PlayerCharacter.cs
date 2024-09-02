@@ -51,6 +51,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private KinematicCharacterMotor _motor;
     [SerializeField] private Transform _root;
     [SerializeField] private Transform _cameraTarget;
+    [SerializeField] private PlayerCamera _playerCamera;
 
     [Space]
     [Header("Movement")]
@@ -61,15 +62,19 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private float _walkResponse = 25f;
     [SerializeField] private float _crouchResponse = 20f;
 
-    [Header("Wall Running")]
+    [Header("Wall Running, Wall Jumping")]
     [SerializeField] private LayerMask _whatIsWall;
     [SerializeField] private LayerMask _whatIsGround;
+    [SerializeField] private float _cameraZTilt = 7.5f;
     [Space]
     [SerializeField] private float _wallRunSpeed = 30f;
     [SerializeField] private float _wallJumpForce = 10f;
     [SerializeField] private float _wallSideJumpForce = 10f;
     [Space]
     [SerializeField] private float _exitWallTime = 0.2f;
+    [Space]
+    [SerializeField] private bool _useWallCounterForce = true;
+    [SerializeField] private float _wallCounterForce = 10f;
 
     [Header("Wall Detection")]
     [SerializeField] private float _wallCheckDistance = 3f;
@@ -461,13 +466,13 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             var grounded = _motor.GroundingStatus.IsStableOnGround;
             var canCoyoteJump = _timeSinceUngrounded < _coyoteTime && !_ungroundedDueToJump;
 
-            //if (_isWallRunning)
-            //{
-            //    _requestedInput.Jump = false;     //Unset jump request
-            //    _requestedInput.Crouch = false;   // and request the character uncrouch
-            //    _requestedInput.CrouchInAir = false;
-            //    WallJump(ref currentVelocity, deltaTime);
-            //}
+            if (_isWallRunning)
+            {
+                _requestedInput.Jump = false;     //Unset jump request
+                _requestedInput.Crouch = false;   // and request the character uncrouch
+                _requestedInput.CrouchInAir = false;
+                WallJump(ref currentVelocity, deltaTime);
+            }
 
             if (grounded || canCoyoteJump)
             {
@@ -631,17 +636,17 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                 StartWallRun();
             }
         }
-        //else if (_isExitingWall)
-        //{
-        //    if (_isWallRunning)
-        //        StopWallRun();
-        //
-        //    if (_exitWallTimer > 0)
-        //        _exitWallTimer -= Time.deltaTime;
-        //
-        //    if (_exitWallTimer <= 0)
-        //        _isExitingWall = false;
-        //}
+        else if (_isExitingWall)
+        {
+            if (_isWallRunning)
+                StopWallRun();
+        
+            if (_exitWallTimer > 0)
+                _exitWallTimer -= Time.deltaTime;
+        
+            if (_exitWallTimer <= 0)
+                _isExitingWall = false;
+        }
         else
         {
             if (_isWallRunning)
@@ -690,7 +695,10 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         _isWallRunning = true;
 
         // Change Fov
+        _playerCamera.DoFov(90f);
         // Do Tilt
+        if (_isWallRight) _playerCamera.DoTilt(_cameraZTilt);
+        if (_isWallLeft) _playerCamera.DoTilt(-_cameraZTilt);
     }
 
     private void WallRunningMovement(ref Vector3 currentVelocity, float deltaTime)
@@ -705,12 +713,16 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         currentVelocity = wallForward * _wallRunSpeed;
 
         // Add Velocity for Stick on wall
-        //if (!(_isWallLeft && _moveInput.x > 0) && !(_isWallRight && _moveInput.x < 0))
-        //    currentVelocity += -wallNoramal * 100;
+        if (_useWallCounterForce)
+        {
+            if (!(_isWallLeft && _moveInput.x > 0) && !(_isWallRight && _moveInput.x < 0))
+                currentVelocity += -wallNoramal * _wallCounterForce;
+        }
     }
 
     private void WallJump(ref Vector3 currentVelocity, float deltaTime)
     {
+        Debug.Log("Wall Jump");
         _isExitingWall = true;
         _exitWallTimer = _exitWallTime;
 
@@ -733,8 +745,10 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     {
         _isWallRunning = false;
 
-        //Change FOv
-        // reset Tilt
+        //Change Fov
+        _playerCamera.DoFov(80f);
+        //reset Tilt
+        _playerCamera.DoTilt(0f);
     }
     #endregion
 }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using DG.Tweening;
 
 public struct CameraInput
 {
@@ -7,6 +8,8 @@ public struct CameraInput
 
 public class PlayerCamera : MonoBehaviour
 {
+    private Camera _mainCamera;
+
     [Header("Mouse Sensitivity")]
     [SerializeField] private float _sensitivity = 0.1f;
 
@@ -15,6 +18,8 @@ public class PlayerCamera : MonoBehaviour
     {
         transform.position = target.position;
         transform.eulerAngles = _eulerAngles = transform.eulerAngles;
+
+        _mainCamera = Camera.main;
     }
 
     public void UpdateRotation(CameraInput input)
@@ -29,5 +34,15 @@ public class PlayerCamera : MonoBehaviour
     public void UpdatePosition(Transform target)
     {
         transform.position = target.position;
+    }
+
+    public void DoFov(float endValue)
+    {
+        _mainCamera.DOFieldOfView(endValue, 0f);
+    }
+
+    public void DoTilt(float zTilt)
+    {
+        _mainCamera.transform.DOLocalRotate(new Vector3(transform.rotation.x, transform.rotation.y, zTilt), 0.25f);
     }
 }
