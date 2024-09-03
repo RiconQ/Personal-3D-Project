@@ -227,7 +227,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             $"Stance : {_state.Stance.ToString()}\n" +
             $"Grounded : {_state.Grounded}\n" +
             $"isWallRight : {_isWallRight}\n" +
-            $"isWallLeft : {_isWallLeft}\n";
+            $"isWallLeft : {_isWallLeft}\n" +
+            $"Velocity : {_motor.Velocity.magnitude}";
 
         debugText.text = $"{debugLog}";
 
@@ -579,27 +580,32 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                     //
                     //currentVelocity = velocityToNextPos;
 
-
+                    _characterToRopeAttachPoint = transform.position - _swingPoint;
+                    
+                    currentVelocity = Vector3.ProjectOnPlane(currentVelocity, _characterToRopeAttachPoint.normalized);
+                    
                     Vector3 nextPos = transform.position + (currentVelocity * Time.deltaTime);
 
                     Vector3 anchorPointToNextPos = nextPos - _swingPoint;
 
                     float distanceToAnchorPoint = anchorPointToNextPos.magnitude;
 
-                    Vector3 swingDirection = currentVelocity.normalized;
-
-                    currentVelocity += swingDirection * _swingForce * deltaTime;
+                    //Vector3 swingDirection = currentVelocity.normalized;
+                    //
+                    //currentVelocity += swingDirection * _swingForce * deltaTime;
 
                     if (distanceToAnchorPoint > _maxGrappleDistance)
                     {
                         Vector3 nextPosCorrected = _swingPoint + (anchorPointToNextPos.normalized * _maxGrappleDistance);
 
-                        currentVelocity = (nextPosCorrected - transform.position) / Time.deltaTime;
+                        currentVelocity = (nextPosCorrected - transform.position) / deltaTime;
+                        currentVelocity = Vector3.Lerp(currentVelocity, (nextPosCorrected - transform.position) / deltaTime, 0.1f);
                     }
                     else
                     {
                         currentVelocity = Vector3.ProjectOnPlane(currentVelocity, anchorPointToNextPos.normalized);
                     }
+
                 }
             }
         }
