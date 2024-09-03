@@ -32,6 +32,8 @@ public struct CharacterInput
     public bool Jump;
     public bool JumpSustain;
     public ECrouchInput Crouch;
+    public bool GrapplingHook;
+    public bool GrapplingSwing;
 }
 
 public struct RequestedInput
@@ -42,13 +44,15 @@ public struct RequestedInput
     public bool SustainJump;
     public bool Crouch;
     public bool CrouchInAir;
+    public bool GrapplingHook;
+    public bool GrapplingSwing;
 }
 
 public class PlayerCharacter : MonoBehaviour, ICharacterController
 {
     #region Variables
 
-    [Header("Assignables")]
+    [Header("Reference")]
     [SerializeField] private KinematicCharacterMotor _motor;
     [SerializeField] private Transform _root;
     [SerializeField] private Transform _cameraTarget;
@@ -93,7 +97,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private float _maxWallLockAngle = 30f;
     [SerializeField] private float _minWallNormalAngleChange = 5f;
 
-
     [Header("Jump")]
     [SerializeField] private float _jumpSpeed = 20f;
     [SerializeField] private float _coyoteTime = 0.2f;
@@ -122,6 +125,17 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [Range(0f, 1f)]
     [SerializeField] private float _crouchCameraTargetHeight = 0.7f;
 
+    [Header("GrapplingSwing")]
+    [SerializeField] private LineRenderer _lr;
+    [SerializeField] private Transform _cameraTransform;
+    [SerializeField] private Transform _gunTip;
+    [Space]
+    [SerializeField] private LayerMask _whatIsGrappable;
+    [SerializeField] private float _maxGrappleDistance = 50f;
+    [SerializeField] private float _swingDelayTime = 0.25f;
+    [SerializeField] private float _swingCooldownTime = 0.25f;
+    [SerializeField] private float _swingForce = 2f;
+
     private CharacterState _state;
     private CharacterState _lastState;
     private CharacterState _tempState;
@@ -147,7 +161,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private bool _isWallRunning;
     private bool _isExitingWall;
     private float _exitWallTimer;
-    #endregion
+    #endregion Wall Run
 
     #region Wall Climb
     // Wall Detection
@@ -164,15 +178,23 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private bool _isClimbing;
 
 
-    #endregion
+    #endregion Wall Climb
 
     private Collider[] _uncrouchOverlapResults;
-    #endregion
+
+    #region Grapple Swing
+    private Vector3 _swingPoint;
+    private float _swingCooldownTimer;
+    private bool _isSwinging;
+    private Vector3 _characterToRopeAttachPoint;
+    #endregion Grapple Swing
+
+    #endregion Code Variables
 
     [Header("Debug")]
     public TMP_Text debugText;
 
-    #endregion
+    #endregion Variables
 
     public void Initialize()
     {
@@ -192,6 +214,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         _isWallRight = false;
         _isWallRunning = false;
         _isExitingWall = false;
+        _isSwinging = false;
+        _lr.enabled = false;
     }
 
     private void Update()
@@ -203,8 +227,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             $"Stance : {_state.Stance.ToString()}\n" +
             $"Grounded : {_state.Grounded}\n" +
             $"isWallRight : {_isWallRight}\n" +
-            $"isWallLeft : {_isWallLeft}\n" +
-            $"";
+            $"isWallLeft : {_isWallLeft}\n";
 
         debugText.text = $"{debugLog}";
 
@@ -215,27 +238,48 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         WallClimbState();
     }
 
+    private void LateUpdate()
+    {
+        if (_isSwinging)
+        {
+            _lr.SetPosition(0, _gunTip.position);
+            //Debug.DrawRay(transform.position, -_characterToRopeAttachPoint.normalized * _characterToRopeAttachPoint.magnitude, Color.blue);
+        }
+
+        Debug.DrawRay(transform.position, _motor.Velocity.normalized * 2, Color.yellow);
+
+    }
+
     public void UpdateInput(CharacterInput input, Vector2 moveInput)
     {
+        #region Move Vector2
         _moveInput = moveInput;
+        #endregion
 
+        #region Mouse
         _requestedInput.Rotation = input.Rotation;
+        #endregion
+
+        #region Movement
         // Take Vector2 Input -> Create 3D Movement Vector on XZ Plane
         _requestedInput.Movement = new Vector3(input.Move.x, 0f, input.Move.y);
         // Clamp to 1 length
         _requestedInput.Movement = Vector3.ClampMagnitude(_requestedInput.Movement, 1f);
         // Orient the input so it's relative to the direction the player is facing
         _requestedInput.Movement = input.Rotation * _requestedInput.Movement;
-
+        #endregion
         //Debug.Log(_motor.Velocity);
 
+        #region Jump
         var wasRequestingJump = _requestedInput.Jump;
         _requestedInput.Jump = _requestedInput.Jump || input.Jump;
         if (_requestedInput.Jump && !wasRequestingJump)
             _timeSinceJumpRequest = 0f;
 
         _requestedInput.SustainJump = input.JumpSustain;
+        #endregion
 
+        #region Crouch
         var wasRequestingCrouch = _requestedInput.Crouch;
         _requestedInput.Crouch = input.Crouch switch
         {
@@ -248,6 +292,27 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             _requestedInput.CrouchInAir = !_state.Grounded;
         else if (!_requestedInput.Crouch && wasRequestingCrouch)
             _requestedInput.CrouchInAir = false;
+        #endregion
+
+        #region Grappling Hook
+        //// Grappling Hook
+        //_requestedInput.GrapplingHook = input.GrapplingHook;
+        //if (_requestedInput.GrapplingHook)
+        //{
+        //    _grapplingGun.StartGrapple();
+        //}
+        #endregion
+
+        #region Grappling Swing
+        _requestedInput.GrapplingSwing = input.GrapplingSwing;
+        if (_requestedInput.GrapplingSwing)
+        {
+            if (!_isSwinging)
+                StartGrappleSwing();
+            else
+                StopGrappleSwing();
+        }
+        #endregion
     }
 
     public void UpdateBody(float deltaTime)
@@ -496,6 +561,46 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                     effectiveGravity *= _jumpSustainGravity;
 
                 currentVelocity += _motor.CharacterUp * effectiveGravity * deltaTime;
+
+                if (_isSwinging)
+                {
+                    //Debug.Log("Swing Movement - AIR");
+                    //_characterToRopeAttachPoint = transform.position - _swingPoint;
+                    //
+                    //currentVelocity = Vector3.ProjectOnPlane(currentVelocity, _characterToRopeAttachPoint.normalized);
+                    //
+                    //Vector3 nextPos = transform.position + (currentVelocity * deltaTime);
+                    //
+                    //Vector3 anchorPointToNextPos = nextPos - _swingPoint;
+                    //
+                    //Vector3 nextPosCorrect = _swingPoint + anchorPointToNextPos.normalized * _maxGrappleDistance;
+                    //
+                    //Vector3 velocityToNextPos = (nextPosCorrect - transform.position) / deltaTime;
+                    //
+                    //currentVelocity = velocityToNextPos;
+
+
+                    Vector3 nextPos = transform.position + (currentVelocity * Time.deltaTime);
+
+                    Vector3 anchorPointToNextPos = nextPos - _swingPoint;
+
+                    float distanceToAnchorPoint = anchorPointToNextPos.magnitude;
+
+                    Vector3 swingDirection = currentVelocity.normalized;
+
+                    currentVelocity += swingDirection * _swingForce * deltaTime;
+
+                    if (distanceToAnchorPoint > _maxGrappleDistance)
+                    {
+                        Vector3 nextPosCorrected = _swingPoint + (anchorPointToNextPos.normalized * _maxGrappleDistance);
+
+                        currentVelocity = (nextPosCorrected - transform.position) / Time.deltaTime;
+                    }
+                    else
+                    {
+                        currentVelocity = Vector3.ProjectOnPlane(currentVelocity, anchorPointToNextPos.normalized);
+                    }
+                }
             }
         }
 
@@ -505,6 +610,11 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             var grounded = _motor.GroundingStatus.IsStableOnGround;
             var canCoyoteJump = _timeSinceUngrounded < _coyoteTime && !_ungroundedDueToJump;
 
+            if (_isSwinging && !grounded)
+            {
+                StopGrappleSwing();
+            }
+
             if (_isWallRunning)
             {
                 _requestedInput.Jump = false;     //Unset jump request
@@ -513,7 +623,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                 WallJump(ref currentVelocity, deltaTime);
             }
 
-            if(_isClimbing)
+            if (_isClimbing)
             {
                 _requestedInput.Jump = false;     //Unset jump request
                 _requestedInput.Crouch = false;   // and request the character uncrouch
@@ -634,6 +744,19 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         // update _lastState to store the Character state snapshot taken at
         // the beginning of this character update;
         _lastState = _tempState;
+
+        //if (_isSwinging)
+        //{
+        //
+        //    float distanceToAttachPoint = _characterToRopeAttachPoint.magnitude;
+        //    //Debug.Log($"Rope Dist : {distanceToAttachPoint}");
+        //
+        //    if (distanceToAttachPoint > _maxGrappleDistance)
+        //    {
+        //        Vector3 correctPosition = _swingPoint + _characterToRopeAttachPoint.normalized * _maxGrappleDistance;
+        //        SetPosition(correctPosition);
+        //    }
+        //}
     }
 
 
@@ -710,21 +833,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         //Debug.Log("CheckWall");
         _isWallRight = Physics.Raycast(transform.position, transform.right, out _rightWallHit, _wallRunDetectionDistance, _whatIsWall);
         _isWallLeft = Physics.Raycast(transform.position, -transform.right, out _leftWallHit, _wallRunDetectionDistance, _whatIsWall);
-
-        /*
-        //var crossProduct = Vector3.Cross(_motor.CharacterForward, hitNormal);
-        
-        //if (crossProduct.y > 0)
-        //{
-        //    _isWallRight = false;
-        //    _isWallLeft = true;
-        //}
-        //else if (crossProduct.y < 0)
-        //{
-        //    _isWallRight = true;
-        //    _isWallLeft = false;
-        //}
-        */
     }
 
     /// <summary>
@@ -893,6 +1001,81 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
         // Add the difference in current and target vertical speed to the character's velocity
         currentVelocity += forceToApply * (targetVerticalSpeed - currentVerticalSpeed);
+    }
+    #endregion
+
+    /*
+    #region Grapple
+    public void JumpToPosition(Vector3 targetPosition, float trajectoryHeight)
+    {
+        _isActiveGrapple = true;
+
+        _velocityToSet = CalculateJumpVelocity(transform.position, targetPosition, trajectoryHeight);
+
+    }
+
+    private void SetVelocity()
+    {
+        
+    }
+
+    public void ResetRestrictions()
+    {
+    }
+
+    private Vector3 CalculateJumpVelocity(Vector3 startPoint, Vector3 endPoint, float trajectoryHeight)
+    {
+        float gravity = Physics.gravity.y;
+        float displacementY = endPoint.y - startPoint.y;
+        Vector3 displacementXZ = 
+            new Vector3(endPoint.x - startPoint.x, 0f, endPoint.z - startPoint.z);
+
+        Vector3 velocityY = Vector3.up * Mathf.Sqrt(-2 * gravity * trajectoryHeight);
+        Vector3 velocityXZ = displacementXZ / (Mathf.Sqrt(-2 * trajectoryHeight / gravity)
+            + Mathf.Sqrt(2 * (displacementY - trajectoryHeight) / gravity));
+
+        return velocityXZ + velocityY;
+    }
+    #endregion
+    */
+
+    #region Grapple Swing
+    private void StartGrappleSwing()
+    {
+        RaycastHit hit;
+
+        if (Physics.SphereCast(_cameraTransform.position, 5f,_cameraTransform.forward, out hit, _maxGrappleDistance, _whatIsGrappable))
+        {
+            //Grapple Hit
+            _swingPoint = hit.point;
+
+            //Grapple Animation
+
+            Invoke(nameof(ExecuteSwing), _swingDelayTime);
+        }
+        else
+        {
+            _swingPoint = _cameraTransform.position + _cameraTransform.forward * _maxGrappleDistance;
+
+            //Grapple Animation;
+
+            Invoke(nameof(StopGrappleSwing), _swingDelayTime);
+        }
+
+        _lr.enabled = true;
+        _lr.SetPosition(1, _swingPoint);
+    }
+
+    private void ExecuteSwing()
+    {
+        _isSwinging = true;
+    }
+
+    private void StopGrappleSwing()
+    {
+        _isSwinging = false;
+
+        _lr.enabled = false;
     }
     #endregion
 }

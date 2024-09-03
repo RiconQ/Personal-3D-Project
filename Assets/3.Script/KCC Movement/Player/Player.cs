@@ -63,7 +63,8 @@ public class Player : MonoBehaviour
             JumpSustain = input.Jump.IsPressed(),
             Crouch      = input.Crouch.WasPressedThisFrame() ?
                             ECrouchInput.Toggle : ECrouchInput.None,
-            //Grappling   = input.Grappling.WasPressedThisFrame()
+            GrapplingHook   = input.GrapplingHook.WasPressedThisFrame(),
+            GrapplingSwing = input.GrapplingSwing.WasPressedThisFrame()
         };
 
         _playerCharacter.UpdateInput(characterInput, _inputAction.Player.Move.ReadValue<Vector2>());

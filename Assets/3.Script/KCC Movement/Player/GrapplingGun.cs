@@ -13,17 +13,18 @@ public class GrapplingGun : MonoBehaviour
     [SerializeField] private LineRenderer _lr;
 
     [Header("Grappling")]
-    [SerializeField] private float _maxGrappleDistance;
-    [SerializeField] private float _grappleDelayTime;
-    [SerializeField] private float _overshootYAxis;
+    [SerializeField] private float _maxGrappleDistance = 25f;
+    [SerializeField] private float _grappleDelayTime = 0.25f;
+    [SerializeField] private float _overshootYAxis = 2f;
 
     [Header("CoolDown")]
-    [SerializeField] private float _grappleCooldown;
+    [SerializeField] private float _grappleCooldown = 0.5f;
 
     // Variables
     private Vector3 _grapplePoint;
     private float _grappleCooldownTimer;
     private bool _isGrappling;
+    public bool isFreeze;
 
     private void Start()
     {
@@ -43,14 +44,54 @@ public class GrapplingGun : MonoBehaviour
             _lr.SetPosition(0, _gunTip.position);
     }
 
-    private void StartGrapple()
+    public void UpdateRopePosition()
     {
+        if (_isGrappling)
+            _lr.SetPosition(0, _gunTip.position);
+    }
+
+    public void StartGrapple()
+    {
+        Debug.Log("Start Grapple");
         if (_grappleCooldownTimer > 0) return;
 
         _isGrappling = true;
-        //_playerMovement.isFreeze = true;
+        isFreeze = true;
 
         RaycastHit hit;
-        //if(Physics.Raycast(_))
+        if(Physics.Raycast(
+            _cameraTransform.position, 
+            _cameraTransform.forward,
+            out hit, _maxGrappleDistance, _whatIsGrapple))
+        {
+            _grapplePoint = hit.point;
+
+            Invoke(nameof(ExecuteGrapple), _grappleDelayTime);
+        }
+        else
+        {
+            _grapplePoint = _cameraTransform.position + _cameraTransform.forward * _maxGrappleDistance;
+            Invoke(nameof(StopGrapple), _grappleDelayTime);
+        }
+
+        _lr.enabled = true;
+        _lr.SetPosition(1, _grapplePoint);
+    }
+
+    private void ExecuteGrapple()
+    {
+        isFreeze = false;
+
+        
+    }
+
+    public void StopGrapple()
+    {
+        isFreeze = false;
+        _isGrappling = false;
+
+        _grappleCooldownTimer = _grappleCooldown;
+
+        _lr.enabled = false;
     }
 }

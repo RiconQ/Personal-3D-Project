@@ -42,9 +42,18 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Grappling",
+                    "name": "GrapplingHook",
                     "type": "Button",
                     "id": "0fc35967-7e4e-4b56-b1b4-5ca5d92ef1be",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "GrapplingSwing",
+                    "type": "Button",
+                    "id": "ae0e0a1a-294d-473c-9aac-0f3f398b4ee5",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -154,11 +163,22 @@
                 {
                     "name": "",
                     "id": "741ab555-105a-4910-88de-9affe5ca322e",
-                    "path": "<Keyboard>/q",
+                    "path": "<Mouse>/rightButton",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Grappling",
+                    "action": "GrapplingHook",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "1687c1ce-0fdc-476b-9bd2-41cb9b46f62f",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "GrapplingSwing",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
