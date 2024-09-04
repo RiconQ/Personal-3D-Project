@@ -1,6 +1,7 @@
 using KinematicCharacterController;
 using System;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -17,6 +18,12 @@ public enum EStance
     Slide
 }
 
+public enum EState
+{
+    Default,
+    Dash
+}
+
 public struct CharacterState
 {
     public bool Grounded;
@@ -29,10 +36,10 @@ public struct CharacterInput
 {
     public Quaternion Rotation;
     public Vector2 Move;
+    public bool Dash;
     public bool Jump;
     public bool JumpSustain;
     public ECrouchInput Crouch;
-    public bool GrapplingHook;
     public bool GrapplingSwing;
 }
 
@@ -40,11 +47,11 @@ public struct RequestedInput
 {
     public Quaternion Rotation;
     public Vector3 Movement;
+    public bool Dash;
     public bool Jump;
     public bool SustainJump;
     public bool Crouch;
     public bool CrouchInAir;
-    public bool GrapplingHook;
     public bool GrapplingSwing;
 }
 
@@ -66,6 +73,15 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [Space]
     [SerializeField] private float _walkResponse = 25f;
     [SerializeField] private float _crouchResponse = 20f;
+
+    [Header("Dash")]
+    [SerializeField] private float _dashSpeed = 3f;
+    [SerializeField] private float _dashTime = 0.1f;
+    [SerializeField] private float _dashCooldownTime = 1f;
+    private float _dashCooldownTimer;
+    private EState _state;
+    private float _timeSinceDash = 0f;
+    private Vector3 _currentDashVelocity;
 
     [Header("Wall Running, Wall Jumping")]
     [SerializeField] private LayerMask _whatIsWall;
@@ -137,7 +153,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private float _swingCooldownTime = 0.25f;
     [SerializeField] private float _swingForce = 2f;
 
-    private CharacterState _state;
+    private CharacterState _currentState;
     private CharacterState _lastState;
     private CharacterState _tempState;
 
@@ -201,8 +217,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     public void Initialize()
     {
-        _state.Stance = EStance.Stand;
-        _lastState = _state;
+        _currentState.Stance = EStance.Stand;
+        _lastState = _currentState;
         _uncrouchOverlapResults = new Collider[8];
 
         _motor.CharacterController = this;
@@ -229,8 +245,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             debugText.gameObject.SetActive(!debugText.gameObject.activeSelf);
         //Debug
         string debugLog =
-            $"Stance : {_state.Stance.ToString()}\n" +
-            $"Grounded : {_state.Grounded}\n" +
+            $"Stance : {_currentState.Stance.ToString()}\n" +
+            $"Grounded : {_currentState.Grounded}\n" +
             $"Velocity : {_motor.Velocity.magnitude}\n" +
             $"Jump : {_remainJumpCount} / {_maxJumpCount}";
 
@@ -273,7 +289,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         // Orient the input so it's relative to the direction the player is facing
         _requestedInput.Movement = input.Rotation * _requestedInput.Movement;
         #endregion
-        //Debug.Log(_motor.Velocity);
 
         #region Jump
         var wasRequestingJump = _requestedInput.Jump;
@@ -296,18 +311,9 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         };
 
         if (_requestedInput.Crouch && !wasRequestingCrouch)
-            _requestedInput.CrouchInAir = !_state.Grounded;
+            _requestedInput.CrouchInAir = !_currentState.Grounded;
         else if (!_requestedInput.Crouch && wasRequestingCrouch)
             _requestedInput.CrouchInAir = false;
-        #endregion
-
-        #region Grappling Hook
-        //// Grappling Hook
-        //_requestedInput.GrapplingHook = input.GrapplingHook;
-        //if (_requestedInput.GrapplingHook)
-        //{
-        //    _grapplingGun.StartGrapple();
-        //}
         #endregion
 
         #region Grappling Swing
@@ -321,6 +327,14 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                 StopGrappleSwing();
         }
         #endregion
+
+        #region Dash
+        _requestedInput.Dash = input.Dash;
+        if (_requestedInput.Dash && _dashCooldownTimer <= 0)
+        {
+            ChangeState(EState.Dash);
+        }
+        #endregion Dash
     }
 
     public void UpdateBody(float deltaTime)
@@ -330,7 +344,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
         var cameraTargetHeight = currentHeight *
         (
-            _state.Stance is EStance.Stand ? _standCameraTargetHeight : _crouchCameraTargetHeight
+            _currentState.Stance is EStance.Stand ? _standCameraTargetHeight : _crouchCameraTargetHeight
         );
 
         var rootTargetScale = new Vector3(1f, normalizedHeight, 1f);
@@ -351,331 +365,341 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
-        _state.Acceleration = Vector3.zero;
-
-        // If player on Ground
-        if (_motor.GroundingStatus.IsStableOnGround)
+        _currentState.Acceleration = Vector3.zero;
+        switch (_state)
         {
-            if (_isClimbing)
-            {
-                //Debug.Log("Ground WallClimb");
-                ClimbingMovement(ref currentVelocity, deltaTime);
-            }
-            _timeSinceUngrounded = 0f;
-            _ungroundedDueToJump = false;
-
-            //snap the request movement direction to the angle of surface
-            // -> character is walking on Ground
-            var groundedMovement = _motor.GetDirectionTangentToSurface
-            (
-                direction: _requestedInput.Movement,
-                surfaceNormal: _motor.GroundingStatus.GroundNormal
-            ) * _requestedInput.Movement.magnitude;
-
-            // Start Sliding
-            {
-                var moving = groundedMovement.sqrMagnitude > 0f;
-                var crouching = _state.Stance is EStance.Crouch;
-                var wasStanding = _lastState.Stance is EStance.Stand;
-                var wasInAir = !_lastState.Grounded;
-                if (moving && crouching && (wasStanding || wasInAir))
+            case EState.Default:
+                // If player on Ground
+                if (_motor.GroundingStatus.IsStableOnGround)
                 {
-                    _state.Stance = EStance.Slide;
-
-                    /*
-                     * When landing on stable ground the Character motor projects the velocity onto a flat ground plane
-                     * See : KinematicCharacterMotor.HandleVelocityProjection()
-                     * This is normally good, because under normal circumstances the player shouldn't slide when landing on the ground;
-                     * In this case, we want the player to slide
-                     * Reproject the last frame (falling) velocity onto the ground normal to slide
-                     */
-                    if (wasInAir)
+                    if (_isClimbing)
                     {
-                        currentVelocity = Vector3.ProjectOnPlane
-                        (
-                            vector: _lastState.Velocity,
-                            planeNormal: _motor.GroundingStatus.GroundNormal
-                        );
+                        //Debug.Log("Ground WallClimb");
+                        ClimbingMovement(ref currentVelocity, deltaTime);
                     }
+                    _timeSinceUngrounded = 0f;
+                    _ungroundedDueToJump = false;
 
-                    var effectiveSlideStartSpeed = _slideStartSpeed;
-                    if (!_lastState.Grounded && !_requestedInput.CrouchInAir)
-                    {
-                        effectiveSlideStartSpeed = 0f;
-                        _requestedInput.CrouchInAir = false;
-                    }
-
-                    var slideSpeed = Mathf.Max(effectiveSlideStartSpeed, currentVelocity.magnitude);
-                    currentVelocity = _motor.GetDirectionTangentToSurface
+                    //snap the request movement direction to the angle of surface
+                    // -> character is walking on Ground
+                    var groundedMovement = _motor.GetDirectionTangentToSurface
                     (
-                        direction: currentVelocity,
+                        direction: _requestedInput.Movement,
                         surfaceNormal: _motor.GroundingStatus.GroundNormal
-                    ) * slideSpeed;
-                }
-            }
-
-            // Move
-            if (_state.Stance is EStance.Stand || _state.Stance is EStance.Crouch)
-            {
-                // Calculate the speed and responsiveness of movement based
-                //on the character's stance
-                var speed = _state.Stance is EStance.Stand ? _walkSpeed : _crouchSpeed;
-                var response = _state.Stance is EStance.Stand ? _walkResponse : _crouchResponse;
-
-                // Smooth move along the ground in that direction
-                var targetVelocity = groundedMovement * speed;
-                var moveVelocity = Vector3.Lerp
-                (
-                    a: currentVelocity,
-                    b: targetVelocity,
-                    t: 1f - Mathf.Exp(-response * deltaTime)
-                );
-                _state.Acceleration = moveVelocity - currentVelocity;
-
-                currentVelocity = moveVelocity;
-            }
-            // Continue sliding
-            else
-            {
-                //Friction
-                currentVelocity -= currentVelocity * (_slideFriction * deltaTime);
-
-                // Slope
-                {
-                    var force = Vector3.ProjectOnPlane
-                    (
-                        vector: -_motor.CharacterUp,
-                        planeNormal: _motor.GroundingStatus.GroundNormal
-                    ) * _slideGravity;
-                    // In video 
-                    //currentVelocity -= force * deltaTime;
-                    // IDK why this not working
-                    currentVelocity += force * deltaTime;
-                }
-
-                // Steer 
-                {
-                    //Target velocity is the player's movement direction at the current speed
-                    var currentSpeed = currentVelocity.magnitude;
-                    var targetVelocity = groundedMovement * currentSpeed;
-                    var steerVelocity = currentVelocity;
-                    var steerForce = (targetVelocity - steerVelocity) * _slideSteerAcceleration * deltaTime;
-
-                    //Add steer force, but clamp velocity so the slide speed doesnt increase due to direct movement input
-                    steerVelocity += steerForce;
-                    steerVelocity = Vector3.ClampMagnitude(steerVelocity, currentSpeed);
-
-                    _state.Acceleration = (steerVelocity - currentVelocity) / deltaTime;
-
-                    currentVelocity = steerVelocity;
-                }
-
-                //Stop
-                if (currentVelocity.magnitude < _slideEndSpeed)
-                    _state.Stance = EStance.Crouch;
-            }
-        }
-        // character is in air
-        else
-        {
-            if (_isWallRunning)
-            {
-                WallRunningMovement(ref currentVelocity, deltaTime);
-            }
-            else if (_isClimbing)
-            {
-                //Debug.Log("Air WallClimb");
-                ClimbingMovement(ref currentVelocity, deltaTime);
-            }
-            else
-            {
-                _timeSinceUngrounded += deltaTime;
-
-                // Air Move
-                if (_requestedInput.Movement.sqrMagnitude > 0f)
-                {
-                    // Requested movement projected onto movement plane (magnitude preserved)
-                    var planarMovement = Vector3.ProjectOnPlane
-                    (
-                        vector: _requestedInput.Movement,
-                        planeNormal: _motor.CharacterUp
                     ) * _requestedInput.Movement.magnitude;
 
-                    // current velocity on movement plane
-                    var currentPlanarVelocity = Vector3.ProjectOnPlane
-                    (
-                        vector: currentVelocity,
-                        planeNormal: _motor.CharacterUp
-                    );
-
-                    //Calculate movement force;
-                    // Will be changed depending on current velocity
-                    var movementForce = planarMovement * _airAcceleration * deltaTime;
-
-                    // if moving slower than the max air speed, treat movementForce as a simple steering force
-                    if (currentPlanarVelocity.magnitude < _airSpeed)
+                    // Start Sliding
                     {
-                        //Add it to the current planer velocity for a target velocity
-                        var targetPlanerVelocity = currentPlanarVelocity + movementForce;
-
-                        //Limit target velocity to air speed
-                        targetPlanerVelocity = Vector3.ClampMagnitude(targetPlanerVelocity, _airSpeed);
-
-                        //Steer toward current velocity
-                        movementForce = targetPlanerVelocity - currentPlanarVelocity;
-                    }
-                    //Otherwise, nerf the movementForce when it is in the direction of the current planer velocity
-                    //to prevent accelerating further beyond the max air speed
-                    else if (Vector3.Dot(currentPlanarVelocity, movementForce) > 0f)
-                    {
-                        //Project movement force onto the plane whose normal is the current planar velocity
-                        var constrainedMovementForce = Vector3.ProjectOnPlane
-                        (
-                            vector: movementForce,
-                            planeNormal: currentPlanarVelocity.normalized
-                        );
-                        movementForce = constrainedMovementForce;
-                    }
-
-                    //Prevent air-climbing steep slope
-                    if (_motor.GroundingStatus.FoundAnyGround)
-                    {
-                        //if moving in the same direction as the resultant velocity
-                        if (Vector3.Dot(movementForce, currentVelocity + movementForce) > 0f)
+                        var moving = groundedMovement.sqrMagnitude > 0f;
+                        var crouching = _currentState.Stance is EStance.Crouch;
+                        var wasStanding = _lastState.Stance is EStance.Stand;
+                        var wasInAir = !_lastState.Grounded;
+                        if (moving && crouching && (wasStanding || wasInAir))
                         {
-                            //Calculate Obstruction normal
-                            var obstructionNormal = Vector3.Cross
-                            (
-                                _motor.CharacterUp,
-                                Vector3.Cross
-                                (
-                                    _motor.CharacterUp,
-                                    _motor.GroundingStatus.GroundNormal
-                                )
-                            ).normalized;
+                            _currentState.Stance = EStance.Slide;
 
-                            // project movement force onto obstruction plane
-                            movementForce = Vector3.ProjectOnPlane(movementForce, obstructionNormal);
+                            /*
+                             * When landing on stable ground the Character motor projects the velocity onto a flat ground plane
+                             * See : KinematicCharacterMotor.HandleVelocityProjection()
+                             * This is normally good, because under normal circumstances the player shouldn't slide when landing on the ground;
+                             * In this case, we want the player to slide
+                             * Reproject the last frame (falling) velocity onto the ground normal to slide
+                             */
+                            if (wasInAir)
+                            {
+                                currentVelocity = Vector3.ProjectOnPlane
+                                (
+                                    vector: _lastState.Velocity,
+                                    planeNormal: _motor.GroundingStatus.GroundNormal
+                                );
+                            }
+
+                            var effectiveSlideStartSpeed = _slideStartSpeed;
+                            if (!_lastState.Grounded && !_requestedInput.CrouchInAir)
+                            {
+                                effectiveSlideStartSpeed = 0f;
+                                _requestedInput.CrouchInAir = false;
+                            }
+
+                            var slideSpeed = Mathf.Max(effectiveSlideStartSpeed, currentVelocity.magnitude);
+                            currentVelocity = _motor.GetDirectionTangentToSurface
+                            (
+                                direction: currentVelocity,
+                                surfaceNormal: _motor.GroundingStatus.GroundNormal
+                            ) * slideSpeed;
                         }
                     }
 
-                    currentVelocity += movementForce;
-                }
-
-                //Gravity
-                var effectiveGravity = _gravity;
-                var verticalSpeed = Vector3.Dot(currentVelocity, _motor.CharacterUp);
-                if (_requestedInput.SustainJump && verticalSpeed > 0f)
-                    effectiveGravity *= _jumpSustainGravity;
-
-                currentVelocity += _motor.CharacterUp * effectiveGravity * deltaTime;
-
-                if (_isSwinging)
-                {
-                    //Debug.Log("Swing Movement - AIR");
-                    //_characterToRopeAttachPoint = transform.position - _swingPoint;
-                    //
-                    //currentVelocity = Vector3.ProjectOnPlane(currentVelocity, _characterToRopeAttachPoint.normalized);
-                    //
-                    //Vector3 nextPos = transform.position + (currentVelocity * deltaTime);
-                    //
-                    //Vector3 anchorPointToNextPos = nextPos - _swingPoint;
-                    //
-                    //Vector3 nextPosCorrect = _swingPoint + anchorPointToNextPos.normalized * _maxGrappleDistance;
-                    //
-                    //Vector3 velocityToNextPos = (nextPosCorrect - transform.position) / deltaTime;
-                    //
-                    //currentVelocity = velocityToNextPos;
-
-                    _characterToRopeAttachPoint = transform.position - _swingPoint;
-
-                    currentVelocity = Vector3.ProjectOnPlane(currentVelocity, _characterToRopeAttachPoint.normalized);
-
-                    Vector3 nextPos = transform.position + (currentVelocity * Time.deltaTime);
-
-                    Vector3 anchorPointToNextPos = nextPos - _swingPoint;
-
-                    float distanceToAnchorPoint = anchorPointToNextPos.magnitude;
-
-                    //Vector3 swingDirection = currentVelocity.normalized;
-                    //
-                    //currentVelocity += swingDirection * _swingForce * deltaTime;
-
-                    if (distanceToAnchorPoint > _maxGrappleDistance)
+                    // Move
+                    if (_currentState.Stance is EStance.Stand || _currentState.Stance is EStance.Crouch)
                     {
-                        Vector3 nextPosCorrected = _swingPoint + (anchorPointToNextPos.normalized * _maxGrappleDistance);
+                        // Calculate the speed and responsiveness of movement based
+                        //on the character's stance
+                        var speed = _currentState.Stance is EStance.Stand ? _walkSpeed : _crouchSpeed;
+                        var response = _currentState.Stance is EStance.Stand ? _walkResponse : _crouchResponse;
 
-                        currentVelocity = (nextPosCorrected - transform.position) / deltaTime;
-                        currentVelocity = Vector3.Lerp(currentVelocity, (nextPosCorrected - transform.position) / deltaTime, 0.1f);
+                        // Smooth move along the ground in that direction
+                        var targetVelocity = groundedMovement * speed;
+                        var moveVelocity = Vector3.Lerp
+                        (
+                            a: currentVelocity,
+                            b: targetVelocity,
+                            t: 1f - Mathf.Exp(-response * deltaTime)
+                        );
+                        _currentState.Acceleration = moveVelocity - currentVelocity;
+
+                        currentVelocity = moveVelocity;
+                    }
+                    // Continue sliding
+                    else
+                    {
+                        //Friction
+                        currentVelocity -= currentVelocity * (_slideFriction * deltaTime);
+
+                        // Slope
+                        {
+                            var force = Vector3.ProjectOnPlane
+                            (
+                                vector: -_motor.CharacterUp,
+                                planeNormal: _motor.GroundingStatus.GroundNormal
+                            ) * _slideGravity;
+                            // In video 
+                            //currentVelocity -= force * deltaTime;
+                            // IDK why this not working
+                            currentVelocity += force * deltaTime;
+                        }
+
+                        // Steer 
+                        {
+                            //Target velocity is the player's movement direction at the current speed
+                            var currentSpeed = currentVelocity.magnitude;
+                            var targetVelocity = groundedMovement * currentSpeed;
+                            var steerVelocity = currentVelocity;
+                            var steerForce = (targetVelocity - steerVelocity) * _slideSteerAcceleration * deltaTime;
+
+                            //Add steer force, but clamp velocity so the slide speed doesnt increase due to direct movement input
+                            steerVelocity += steerForce;
+                            steerVelocity = Vector3.ClampMagnitude(steerVelocity, currentSpeed);
+
+                            _currentState.Acceleration = (steerVelocity - currentVelocity) / deltaTime;
+
+                            currentVelocity = steerVelocity;
+                        }
+
+                        //Stop
+                        if (currentVelocity.magnitude < _slideEndSpeed)
+                            _currentState.Stance = EStance.Crouch;
+                    }
+                }
+                // character is in air
+                else
+                {
+                    if (_isWallRunning)
+                    {
+                        WallRunningMovement(ref currentVelocity, deltaTime);
+                    }
+                    else if (_isClimbing)
+                    {
+                        //Debug.Log("Air WallClimb");
+                        ClimbingMovement(ref currentVelocity, deltaTime);
                     }
                     else
                     {
-                        currentVelocity = Vector3.ProjectOnPlane(currentVelocity, anchorPointToNextPos.normalized);
+                        _timeSinceUngrounded += deltaTime;
+
+                        // Air Move
+                        if (_requestedInput.Movement.sqrMagnitude > 0f)
+                        {
+                            // Requested movement projected onto movement plane (magnitude preserved)
+                            var planarMovement = Vector3.ProjectOnPlane
+                            (
+                                vector: _requestedInput.Movement,
+                                planeNormal: _motor.CharacterUp
+                            ) * _requestedInput.Movement.magnitude;
+
+                            // current velocity on movement plane
+                            var currentPlanarVelocity = Vector3.ProjectOnPlane
+                            (
+                                vector: currentVelocity,
+                                planeNormal: _motor.CharacterUp
+                            );
+
+                            //Calculate movement force;
+                            // Will be changed depending on current velocity
+                            var movementForce = planarMovement * _airAcceleration * deltaTime;
+
+                            // if moving slower than the max air speed, treat movementForce as a simple steering force
+                            if (currentPlanarVelocity.magnitude < _airSpeed)
+                            {
+                                //Add it to the current planer velocity for a target velocity
+                                var targetPlanerVelocity = currentPlanarVelocity + movementForce;
+
+                                //Limit target velocity to air speed
+                                targetPlanerVelocity = Vector3.ClampMagnitude(targetPlanerVelocity, _airSpeed);
+
+                                //Steer toward current velocity
+                                movementForce = targetPlanerVelocity - currentPlanarVelocity;
+                            }
+                            //Otherwise, nerf the movementForce when it is in the direction of the current planer velocity
+                            //to prevent accelerating further beyond the max air speed
+                            else if (Vector3.Dot(currentPlanarVelocity, movementForce) > 0f)
+                            {
+                                //Project movement force onto the plane whose normal is the current planar velocity
+                                var constrainedMovementForce = Vector3.ProjectOnPlane
+                                (
+                                    vector: movementForce,
+                                    planeNormal: currentPlanarVelocity.normalized
+                                );
+                                movementForce = constrainedMovementForce;
+                            }
+
+                            //Prevent air-climbing steep slope
+                            if (_motor.GroundingStatus.FoundAnyGround)
+                            {
+                                //if moving in the same direction as the resultant velocity
+                                if (Vector3.Dot(movementForce, currentVelocity + movementForce) > 0f)
+                                {
+                                    //Calculate Obstruction normal
+                                    var obstructionNormal = Vector3.Cross
+                                    (
+                                        _motor.CharacterUp,
+                                        Vector3.Cross
+                                        (
+                                            _motor.CharacterUp,
+                                            _motor.GroundingStatus.GroundNormal
+                                        )
+                                    ).normalized;
+
+                                    // project movement force onto obstruction plane
+                                    movementForce = Vector3.ProjectOnPlane(movementForce, obstructionNormal);
+                                }
+                            }
+
+                            currentVelocity += movementForce;
+                        }
+
+                        //Gravity
+                        var effectiveGravity = _gravity;
+                        var verticalSpeed = Vector3.Dot(currentVelocity, _motor.CharacterUp);
+                        if (_requestedInput.SustainJump && verticalSpeed > 0f)
+                            effectiveGravity *= _jumpSustainGravity;
+
+                        currentVelocity += _motor.CharacterUp * effectiveGravity * deltaTime;
+
+                        if (_isSwinging)
+                        {
+                            //Debug.Log("Swing Movement - AIR");
+                            //_characterToRopeAttachPoint = transform.position - _swingPoint;
+                            //
+                            //currentVelocity = Vector3.ProjectOnPlane(currentVelocity, _characterToRopeAttachPoint.normalized);
+                            //
+                            //Vector3 nextPos = transform.position + (currentVelocity * deltaTime);
+                            //
+                            //Vector3 anchorPointToNextPos = nextPos - _swingPoint;
+                            //
+                            //Vector3 nextPosCorrect = _swingPoint + anchorPointToNextPos.normalized * _maxGrappleDistance;
+                            //
+                            //Vector3 velocityToNextPos = (nextPosCorrect - transform.position) / deltaTime;
+                            //
+                            //currentVelocity = velocityToNextPos;
+
+                            _characterToRopeAttachPoint = transform.position - _swingPoint;
+
+                            currentVelocity = Vector3.ProjectOnPlane(currentVelocity, _characterToRopeAttachPoint.normalized);
+
+                            Vector3 nextPos = transform.position + (currentVelocity * Time.deltaTime);
+
+                            Vector3 anchorPointToNextPos = nextPos - _swingPoint;
+
+                            float distanceToAnchorPoint = anchorPointToNextPos.magnitude;
+
+                            //Vector3 swingDirection = currentVelocity.normalized;
+                            //
+                            //currentVelocity += swingDirection * _swingForce * deltaTime;
+
+                            if (distanceToAnchorPoint > _maxGrappleDistance)
+                            {
+                                Vector3 nextPosCorrected = _swingPoint + (anchorPointToNextPos.normalized * _maxGrappleDistance);
+
+                                currentVelocity = (nextPosCorrected - transform.position) / deltaTime;
+                                currentVelocity = Vector3.Lerp(currentVelocity, (nextPosCorrected - transform.position) / deltaTime, 0.1f);
+                            }
+                            else
+                            {
+                                currentVelocity = Vector3.ProjectOnPlane(currentVelocity, anchorPointToNextPos.normalized);
+                            }
+
+                        }
+                    }
+                }
+
+                //Jump
+                if (_requestedInput.Jump)
+                {
+                    var grounded = _motor.GroundingStatus.IsStableOnGround;
+                    var canCoyoteJump = _timeSinceUngrounded < _coyoteTime && !_ungroundedDueToJump;
+
+                    if (_isSwinging && !grounded)
+                    {
+                        _remainJumpCount = 1;
+                        _requestedInput.Jump = false;     //Unset jump request
+                        _requestedInput.Crouch = false;   // and request the character uncrouch
+                        _requestedInput.CrouchInAir = false;
+                        StopGrappleSwing();
                     }
 
+                    else if (_isWallRunning)
+                    {
+                        _remainJumpCount--;
+                        _requestedInput.Jump = false;     //Unset jump request
+                        _requestedInput.Crouch = false;   // and request the character uncrouch
+                        _requestedInput.CrouchInAir = false;
+                        WallJump(ref currentVelocity, deltaTime);
+                    }
+
+                    else if (_isClimbing)
+                    {
+                        _remainJumpCount--;
+                        _requestedInput.Jump = false;     //Unset jump request
+                        _requestedInput.Crouch = false;   // and request the character uncrouch
+                        _requestedInput.CrouchInAir = false;
+                        ClimbJump(ref currentVelocity, deltaTime);
+                    }
+
+                    else if (grounded || canCoyoteJump || _remainJumpCount > 0)
+                    {
+                        _remainJumpCount--;
+                        _requestedInput.Jump = false;     //Unset jump request
+                        _requestedInput.Crouch = false;   // and request the character uncrouch
+                        _requestedInput.CrouchInAir = false;
+
+                        // Unstick Player from the ground
+                        _motor.ForceUnground(time: 0f);
+                        _ungroundedDueToJump = true;
+
+                        // Set Minimum Vertical Speed to the Jump Speed
+                        var currentVerticalSpeed = Vector3.Dot(currentVelocity, _motor.CharacterUp);
+                        var targetVerticalSpeed = Mathf.Max(currentVerticalSpeed, _jumpSpeed);
+
+                        // Add the difference in current and target vertical speed to the character's velocity
+                        currentVelocity += _motor.CharacterUp * (targetVerticalSpeed - currentVerticalSpeed);
+                    }
+                    else
+                    {
+                        _timeSinceJumpRequest += deltaTime;
+
+                        //Defer the jump request until coyote time has passed
+                        var canJumpLater = _timeSinceJumpRequest < _coyoteTime;
+                        _requestedInput.Jump = canJumpLater;
+                    }
                 }
-            }
-        }
-
-        //Jump
-        if (_requestedInput.Jump)
-        {
-            var grounded = _motor.GroundingStatus.IsStableOnGround;
-            var canCoyoteJump = _timeSinceUngrounded < _coyoteTime && !_ungroundedDueToJump;
-
-            if (_isSwinging && !grounded)
-            {
-                _remainJumpCount = 1;
-                _requestedInput.Jump = false;     //Unset jump request
-                _requestedInput.Crouch = false;   // and request the character uncrouch
-                _requestedInput.CrouchInAir = false;
-                StopGrappleSwing();
-            }
-
-            else if (_isWallRunning)
-            {
-                _remainJumpCount--;
-                _requestedInput.Jump = false;     //Unset jump request
-                _requestedInput.Crouch = false;   // and request the character uncrouch
-                _requestedInput.CrouchInAir = false;
-                WallJump(ref currentVelocity, deltaTime);
-            }
-
-            else if (_isClimbing)
-            {
-                _remainJumpCount--;
-                _requestedInput.Jump = false;     //Unset jump request
-                _requestedInput.Crouch = false;   // and request the character uncrouch
-                _requestedInput.CrouchInAir = false;
-                ClimbJump(ref currentVelocity, deltaTime);
-            }
-
-            else if (grounded || canCoyoteJump || _remainJumpCount > 0)
-            {
-                _remainJumpCount--;
-                _requestedInput.Jump = false;     //Unset jump request
-                _requestedInput.Crouch = false;   // and request the character uncrouch
-                _requestedInput.CrouchInAir = false;
-
-                // Unstick Player from the ground
-                _motor.ForceUnground(time: 0f);
-                _ungroundedDueToJump = true;
-
-                // Set Minimum Vertical Speed to the Jump Speed
-                var currentVerticalSpeed = Vector3.Dot(currentVelocity, _motor.CharacterUp);
-                var targetVerticalSpeed = Mathf.Max(currentVerticalSpeed, _jumpSpeed);
-
-                // Add the difference in current and target vertical speed to the character's velocity
-                currentVelocity += _motor.CharacterUp * (targetVerticalSpeed - currentVerticalSpeed);
-            }
-            else
-            {
-                _timeSinceJumpRequest += deltaTime;
-
-                //Defer the jump request until coyote time has passed
-                var canJumpLater = _timeSinceJumpRequest < _coyoteTime;
-                _requestedInput.Jump = canJumpLater;
-            }
+                break;
+            case EState.Dash:
+                if (_timeSinceDash > 0)
+                {
+                    currentVelocity = _currentDashVelocity;
+                }
+                break;
         }
     }
     public void UpdateRotation(ref Quaternion currentRotation, float deltaTime)
@@ -703,12 +727,12 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     public void BeforeCharacterUpdate(float deltaTime)
     {
-        _tempState = _state;
+        _tempState = _currentState;
 
         // Crocuh
-        if (_requestedInput.Crouch && _state.Stance is EStance.Stand)
+        if (_requestedInput.Crouch && _currentState.Stance is EStance.Stand)
         {
-            _state.Stance = EStance.Crouch;
+            _currentState.Stance = EStance.Crouch;
             _motor.SetCapsuleDimensions
             (
                 radius: _motor.Capsule.radius,
@@ -719,64 +743,64 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     }
     public void PostGroundingUpdate(float deltaTime)
     {
-        if (!_motor.GroundingStatus.IsStableOnGround && _state.Stance is EStance.Slide)
-            _state.Stance = EStance.Crouch;
+        if (!_motor.GroundingStatus.IsStableOnGround && _currentState.Stance is EStance.Slide)
+            _currentState.Stance = EStance.Crouch;
     }
     public void AfterCharacterUpdate(float deltaTime)
     {
-        // Uncrouch
-        if (!_requestedInput.Crouch && _state.Stance != EStance.Stand)
+        switch (_state)
         {
-            // Tentatively stand up the character capsule
-            _motor.SetCapsuleDimensions
-            (
-                radius: _motor.Capsule.radius,
-                height: _standHeight,
-                yOffset: _standHeight * 0.5f
-            );
+            case EState.Default:
+                // Uncrouch
+                if (!_requestedInput.Crouch && _currentState.Stance != EStance.Stand)
+                {
+                    // Tentatively stand up the character capsule
+                    _motor.SetCapsuleDimensions
+                    (
+                        radius: _motor.Capsule.radius,
+                        height: _standHeight,
+                        yOffset: _standHeight * 0.5f
+                    );
 
-            // Check if the capsule overlap any collider before
-            // allow character to standup
-            var pos = _motor.TransientPosition;
-            var rot = _motor.TransientRotation;
-            var mask = _motor.CollidableLayers;
+                    // Check if the capsule overlap any collider before
+                    // allow character to standup
+                    var pos = _motor.TransientPosition;
+                    var rot = _motor.TransientRotation;
+                    var mask = _motor.CollidableLayers;
 
-            if (_motor.CharacterOverlap(pos, rot, _uncrouchOverlapResults, mask, QueryTriggerInteraction.Ignore) > 0)
-            {
-                // Crouch again
-                _requestedInput.Crouch = true;
-                _motor.SetCapsuleDimensions
-                (
-                    radius: _motor.Capsule.radius,
-                    height: _crouchHeight,
-                    yOffset: _crouchHeight * 0.5f
-                );
-            }
-            else
-            {
-                _state.Stance = EStance.Stand;
-            }
+                    if (_motor.CharacterOverlap(pos, rot, _uncrouchOverlapResults, mask, QueryTriggerInteraction.Ignore) > 0)
+                    {
+                        // Crouch again
+                        _requestedInput.Crouch = true;
+                        _motor.SetCapsuleDimensions
+                        (
+                            radius: _motor.Capsule.radius,
+                            height: _crouchHeight,
+                            yOffset: _crouchHeight * 0.5f
+                        );
+                    }
+                    else
+                    {
+                        _currentState.Stance = EStance.Stand;
+                    }
+                }
+
+                _dashCooldownTimer -= deltaTime;
+                break;
+            case EState.Dash:
+                if (_timeSinceDash > 0f)
+                    _timeSinceDash -= deltaTime;
+                else
+                    ChangeState(EState.Default);
+                break;
         }
 
         //Update state to reflect relevant motor properties
-        _state.Grounded = _motor.GroundingStatus.IsStableOnGround;
-        _state.Velocity = _motor.Velocity;
+        _currentState.Grounded = _motor.GroundingStatus.IsStableOnGround;
+        _currentState.Velocity = _motor.Velocity;
         // update _lastState to store the Character state snapshot taken at
         // the beginning of this character update;
         _lastState = _tempState;
-
-        //if (_isSwinging)
-        //{
-        //
-        //    float distanceToAttachPoint = _characterToRopeAttachPoint.magnitude;
-        //    //Debug.Log($"Rope Dist : {distanceToAttachPoint}");
-        //
-        //    if (distanceToAttachPoint > _maxGrappleDistance)
-        //    {
-        //        Vector3 correctPosition = _swingPoint + _characterToRopeAttachPoint.normalized * _maxGrappleDistance;
-        //        SetPosition(correctPosition);
-        //    }
-        //}
     }
 
 
@@ -789,8 +813,13 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     }
     public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
-        if(hitStabilityReport.IsStable)
+        if (hitStabilityReport.IsStable)
         { ResetJumpCount(); }
+
+        if (_isSwinging)
+        {
+            StopGrappleSwing();
+        }
     }
     public bool IsColliderValidForCollisions(Collider coll)
     {
@@ -809,7 +838,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         return _cameraTarget;
     }
 
-    public CharacterState GetState() => _state;
+    public CharacterState GetState() => _currentState;
     public CharacterState GetLastState() => _lastState;
 
     public void SetPosition(Vector3 position, bool killVelocity = true)
@@ -1103,4 +1132,43 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         return _gunTip.position;
     }
     #endregion
+
+    #region Character State
+    private void ChangeState(EState newState)
+    {
+        EState tmpInitialState = _state;
+        OnStateExit(tmpInitialState, newState);
+        _state = newState;
+        OnStateEnter(newState, tmpInitialState);
+    }
+
+    private void OnStateEnter(EState state, EState fromState)
+    {
+        switch (state)
+        {
+            case EState.Default:
+                break;
+            case EState.Dash:
+                _currentDashVelocity = _cameraTransform.forward * _dashSpeed;
+                _currentDashVelocity =
+                    _currentDashVelocity.magnitude > _motor.Velocity.magnitude
+                    ? _currentDashVelocity : _cameraTransform.forward * _motor.Velocity.magnitude;
+                _timeSinceDash = _dashTime;
+                break;
+
+        }
+    }
+
+    private void OnStateExit(EState state, EState toState)
+    {
+        switch (state)
+        {
+            case EState.Default:
+                break;
+            case EState.Dash:
+                _dashCooldownTimer = _dashCooldownTime;
+                break;
+        }
+    }
+    #endregion Character State
 }

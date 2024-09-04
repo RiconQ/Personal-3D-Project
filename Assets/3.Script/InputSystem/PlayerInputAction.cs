@@ -64,7 +64,7 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""GrapplingHook"",
+                    ""name"": ""Dash"",
                     ""type"": ""Button"",
                     ""id"": ""0fc35967-7e4e-4b56-b1b4-5ca5d92ef1be"",
                     ""expectedControlType"": ""Button"",
@@ -185,11 +185,11 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""741ab555-105a-4910-88de-9affe5ca322e"",
-                    ""path"": ""<Mouse>/rightButton"",
+                    ""path"": ""<Keyboard>/leftShift"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""GrapplingHook"",
+                    ""action"": ""Dash"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -215,7 +215,7 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
         m_Player_Move = m_Player.FindAction("Move", throwIfNotFound: true);
         m_Player_Jump = m_Player.FindAction("Jump", throwIfNotFound: true);
         m_Player_Crouch = m_Player.FindAction("Crouch", throwIfNotFound: true);
-        m_Player_GrapplingHook = m_Player.FindAction("GrapplingHook", throwIfNotFound: true);
+        m_Player_Dash = m_Player.FindAction("Dash", throwIfNotFound: true);
         m_Player_GrapplingSwing = m_Player.FindAction("GrapplingSwing", throwIfNotFound: true);
     }
 
@@ -282,7 +282,7 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Move;
     private readonly InputAction m_Player_Jump;
     private readonly InputAction m_Player_Crouch;
-    private readonly InputAction m_Player_GrapplingHook;
+    private readonly InputAction m_Player_Dash;
     private readonly InputAction m_Player_GrapplingSwing;
     public struct PlayerActions
     {
@@ -292,7 +292,7 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
         public InputAction @Move => m_Wrapper.m_Player_Move;
         public InputAction @Jump => m_Wrapper.m_Player_Jump;
         public InputAction @Crouch => m_Wrapper.m_Player_Crouch;
-        public InputAction @GrapplingHook => m_Wrapper.m_Player_GrapplingHook;
+        public InputAction @Dash => m_Wrapper.m_Player_Dash;
         public InputAction @GrapplingSwing => m_Wrapper.m_Player_GrapplingSwing;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
@@ -315,9 +315,9 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
             @Crouch.started += instance.OnCrouch;
             @Crouch.performed += instance.OnCrouch;
             @Crouch.canceled += instance.OnCrouch;
-            @GrapplingHook.started += instance.OnGrapplingHook;
-            @GrapplingHook.performed += instance.OnGrapplingHook;
-            @GrapplingHook.canceled += instance.OnGrapplingHook;
+            @Dash.started += instance.OnDash;
+            @Dash.performed += instance.OnDash;
+            @Dash.canceled += instance.OnDash;
             @GrapplingSwing.started += instance.OnGrapplingSwing;
             @GrapplingSwing.performed += instance.OnGrapplingSwing;
             @GrapplingSwing.canceled += instance.OnGrapplingSwing;
@@ -337,9 +337,9 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
             @Crouch.started -= instance.OnCrouch;
             @Crouch.performed -= instance.OnCrouch;
             @Crouch.canceled -= instance.OnCrouch;
-            @GrapplingHook.started -= instance.OnGrapplingHook;
-            @GrapplingHook.performed -= instance.OnGrapplingHook;
-            @GrapplingHook.canceled -= instance.OnGrapplingHook;
+            @Dash.started -= instance.OnDash;
+            @Dash.performed -= instance.OnDash;
+            @Dash.canceled -= instance.OnDash;
             @GrapplingSwing.started -= instance.OnGrapplingSwing;
             @GrapplingSwing.performed -= instance.OnGrapplingSwing;
             @GrapplingSwing.canceled -= instance.OnGrapplingSwing;
@@ -366,7 +366,7 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
         void OnMove(InputAction.CallbackContext context);
         void OnJump(InputAction.CallbackContext context);
         void OnCrouch(InputAction.CallbackContext context);
-        void OnGrapplingHook(InputAction.CallbackContext context);
+        void OnDash(InputAction.CallbackContext context);
         void OnGrapplingSwing(InputAction.CallbackContext context);
     }
 }

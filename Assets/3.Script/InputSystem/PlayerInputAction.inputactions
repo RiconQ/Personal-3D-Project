@@ -42,7 +42,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "GrapplingHook",
+                    "name": "Dash",
                     "type": "Button",
                     "id": "0fc35967-7e4e-4b56-b1b4-5ca5d92ef1be",
                     "expectedControlType": "Button",
@@ -163,11 +163,11 @@
                 {
                     "name": "",
                     "id": "741ab555-105a-4910-88de-9affe5ca322e",
-                    "path": "<Mouse>/rightButton",
+                    "path": "<Keyboard>/leftShift",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "GrapplingHook",
+                    "action": "Dash",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

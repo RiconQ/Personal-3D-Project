@@ -4358,6 +4358,9 @@ MonoBehaviour:
   _crouchSpeed: 7
   _walkResponse: 25
   _crouchResponse: 20
+  _dashSpeed: 40
+  _dashTime: 0.1
+  _dashCooldownTime: 1
   _whatIsWall:
     serializedVersion: 2
     m_Bits: 512
