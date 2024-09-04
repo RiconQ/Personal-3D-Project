@@ -98,6 +98,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private float _minWallNormalAngleChange = 5f;
 
     [Header("Jump")]
+    [SerializeField] private int _maxJumpCount = 2;
     [SerializeField] private float _jumpSpeed = 20f;
     [SerializeField] private float _coyoteTime = 0.2f;
     [Range(0f, 1f)]
@@ -149,6 +150,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private float _timeSinceUngrounded;
     private float _timeSinceJumpRequest;
     private bool _ungroundedDueToJump;
+    private int _remainJumpCount;
 
     #region Wall Run
     // Wall Detection
@@ -216,8 +218,9 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         _isWallRunning = false;
         _isExitingWall = false;
         _isSwinging = false;
-        //_lr.enabled = false;
+        _lr.enabled = false;
         _isGrappling = false;
+        _remainJumpCount = _maxJumpCount;
     }
 
     private void Update()
@@ -228,9 +231,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         string debugLog =
             $"Stance : {_state.Stance.ToString()}\n" +
             $"Grounded : {_state.Grounded}\n" +
-            $"isWallRight : {_isWallRight}\n" +
-            $"isWallLeft : {_isWallLeft}\n" +
-            $"Velocity : {_motor.Velocity.magnitude}";
+            $"Velocity : {_motor.Velocity.magnitude}\n" +
+            $"Jump : {_remainJumpCount} / {_maxJumpCount}";
 
         debugText.text = $"{debugLog}";
 
@@ -276,8 +278,10 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         #region Jump
         var wasRequestingJump = _requestedInput.Jump;
         _requestedInput.Jump = _requestedInput.Jump || input.Jump;
-        if (_requestedInput.Jump && !wasRequestingJump)
+        if ((_requestedInput.Jump && !wasRequestingJump) && _remainJumpCount > 0)
+        {
             _timeSinceJumpRequest = 0f;
+        }
 
         _requestedInput.SustainJump = input.JumpSustain;
         #endregion
@@ -621,27 +625,34 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
             if (_isSwinging && !grounded)
             {
+                _remainJumpCount = 1;
+                _requestedInput.Jump = false;     //Unset jump request
+                _requestedInput.Crouch = false;   // and request the character uncrouch
+                _requestedInput.CrouchInAir = false;
                 StopGrappleSwing();
             }
 
-            if (_isWallRunning)
+            else if (_isWallRunning)
             {
+                _remainJumpCount--;
                 _requestedInput.Jump = false;     //Unset jump request
                 _requestedInput.Crouch = false;   // and request the character uncrouch
                 _requestedInput.CrouchInAir = false;
                 WallJump(ref currentVelocity, deltaTime);
             }
 
-            if (_isClimbing)
+            else if (_isClimbing)
             {
+                _remainJumpCount--;
                 _requestedInput.Jump = false;     //Unset jump request
                 _requestedInput.Crouch = false;   // and request the character uncrouch
                 _requestedInput.CrouchInAir = false;
                 ClimbJump(ref currentVelocity, deltaTime);
             }
 
-            if (grounded || canCoyoteJump)
+            else if (grounded || canCoyoteJump || _remainJumpCount > 0)
             {
+                _remainJumpCount--;
                 _requestedInput.Jump = false;     //Unset jump request
                 _requestedInput.Crouch = false;   // and request the character uncrouch
                 _requestedInput.CrouchInAir = false;
@@ -771,13 +782,15 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     public void OnGroundHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
-        if(_isSwinging)
+        if (_isSwinging)
         {
             StopGrappleSwing();
         }
     }
     public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
+        if(hitStabilityReport.IsStable)
+        { ResetJumpCount(); }
     }
     public bool IsColliderValidForCollisions(Collider coll)
     {
@@ -806,6 +819,11 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         {
             _motor.BaseVelocity = Vector3.zero;
         }
+    }
+
+    private void ResetJumpCount()
+    {
+        _remainJumpCount = _maxJumpCount;
     }
 
     #region Wall Run
@@ -859,6 +877,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     private void StartWallRun()
     {
+        ResetJumpCount();
         //Debug.Log("Start WallRun");
         _isWallRunning = true;
 
@@ -980,6 +999,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     private void StartClimbing()
     {
+        ResetJumpCount();
         //Debug.Log("Start Climbing");
         _isClimbing = true;
 
@@ -1025,41 +1045,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     }
     #endregion
 
-    /*
-    #region Grapple
-    public void JumpToPosition(Vector3 targetPosition, float trajectoryHeight)
-    {
-        _isActiveGrapple = true;
-
-        _velocityToSet = CalculateJumpVelocity(transform.position, targetPosition, trajectoryHeight);
-
-    }
-
-    private void SetVelocity()
-    {
-        
-    }
-
-    public void ResetRestrictions()
-    {
-    }
-
-    private Vector3 CalculateJumpVelocity(Vector3 startPoint, Vector3 endPoint, float trajectoryHeight)
-    {
-        float gravity = Physics.gravity.y;
-        float displacementY = endPoint.y - startPoint.y;
-        Vector3 displacementXZ = 
-            new Vector3(endPoint.x - startPoint.x, 0f, endPoint.z - startPoint.z);
-
-        Vector3 velocityY = Vector3.up * Mathf.Sqrt(-2 * gravity * trajectoryHeight);
-        Vector3 velocityXZ = displacementXZ / (Mathf.Sqrt(-2 * trajectoryHeight / gravity)
-            + Mathf.Sqrt(2 * (displacementY - trajectoryHeight) / gravity));
-
-        return velocityXZ + velocityY;
-    }
-    #endregion
-    */
-
     #region Grapple Swing
     private void StartGrappleSwing()
     {
@@ -1093,6 +1078,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private void ExecuteSwing()
     {
         _isSwinging = true;
+        ResetJumpCount();
     }
 
     private void StopGrappleSwing()

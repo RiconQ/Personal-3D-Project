@@ -3427,7 +3427,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1237494259}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -4130,7 +4130,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1449896798}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4baa2cd5edb750b4199a0402df684c6b, type: 3}
   m_Name: 
@@ -4191,7 +4191,7 @@ Transform:
   m_GameObject: {fileID: 1461382880}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.502}
+  m_LocalPosition: {x: -9.51, y: -2.62, z: -0.896}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4380,6 +4380,7 @@ MonoBehaviour:
   _sphereCastRadius: 3
   _maxWallLockAngle: 20
   _minWallNormalAngleChange: 5
+  _maxJumpCount: 2
   _jumpSpeed: 20
   _coyoteTime: 0.2
   _jumpSustainGravity: 0.4
