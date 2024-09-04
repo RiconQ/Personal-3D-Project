@@ -632,7 +632,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                         }
                     }
                 }
-
                 //Jump
                 if (_requestedInput.Jump)
                 {

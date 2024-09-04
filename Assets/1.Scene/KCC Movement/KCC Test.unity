@@ -4371,7 +4371,7 @@ MonoBehaviour:
   _wallRunSpeed: 50
   _wallJumpForce: 4.5
   _wallSideJumpForce: 5
-  _exitWallTime: 0.2
+  _exitWallTime: 0.5
   _useWallCounterForce: 1
   _wallCounterForce: 10
   _climbSpeed: 10
