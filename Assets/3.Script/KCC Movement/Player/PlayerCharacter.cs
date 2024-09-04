@@ -185,6 +185,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     #region Grapple Swing
     private Vector3 _swingPoint;
     private float _swingCooldownTimer;
+    private bool _isGrappling;
     private bool _isSwinging;
     private Vector3 _characterToRopeAttachPoint;
     #endregion Grapple Swing
@@ -215,7 +216,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         _isWallRunning = false;
         _isExitingWall = false;
         _isSwinging = false;
-        _lr.enabled = false;
+        //_lr.enabled = false;
+        _isGrappling = false;
     }
 
     private void Update()
@@ -241,7 +243,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     private void LateUpdate()
     {
-        if (_isSwinging)
+        if (_isGrappling || _isSwinging)
         {
             _lr.SetPosition(0, _gunTip.position);
             //Debug.DrawRay(transform.position, -_characterToRopeAttachPoint.normalized * _characterToRopeAttachPoint.magnitude, Color.blue);
@@ -306,7 +308,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
         #region Grappling Swing
         _requestedInput.GrapplingSwing = input.GrapplingSwing;
-        if (_requestedInput.GrapplingSwing)
+        if (_requestedInput.GrapplingSwing && !_motor.GroundingStatus.IsStableOnGround)
+        //if (_requestedInput.GrapplingSwing)
         {
             if (!_isSwinging)
                 StartGrappleSwing();
@@ -581,9 +584,9 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                     //currentVelocity = velocityToNextPos;
 
                     _characterToRopeAttachPoint = transform.position - _swingPoint;
-                    
+
                     currentVelocity = Vector3.ProjectOnPlane(currentVelocity, _characterToRopeAttachPoint.normalized);
-                    
+
                     Vector3 nextPos = transform.position + (currentVelocity * Time.deltaTime);
 
                     Vector3 anchorPointToNextPos = nextPos - _swingPoint;
@@ -768,6 +771,10 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     public void OnGroundHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
+        if(_isSwinging)
+        {
+            StopGrappleSwing();
+        }
     }
     public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
@@ -871,7 +878,15 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         if ((transform.forward - wallForward).magnitude > (transform.forward - -wallForward).magnitude)
             wallForward = -wallForward;
 
-        currentVelocity = wallForward * _wallRunSpeed;
+        //currentVelocity = wallForward * _wallRunSpeed;
+
+        {
+            Vector3 horizontalVelocity = new Vector3(currentVelocity.x, 0, currentVelocity.z);
+
+            //Blend Wall run speed and player current horizontal speed
+            float blendFactor = 0.1f;
+            currentVelocity = Vector3.Lerp(horizontalVelocity, wallForward * _wallRunSpeed, blendFactor);
+        }
 
         // Add Velocity for Stick on wall
         if (_useWallCounterForce)
@@ -1049,13 +1064,16 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private void StartGrappleSwing()
     {
         RaycastHit hit;
+        _isGrappling = true;
 
-        if (Physics.SphereCast(_cameraTransform.position, 5f,_cameraTransform.forward, out hit, _maxGrappleDistance, _whatIsGrappable))
+        if (Physics.SphereCast(_cameraTransform.position, 5f, _cameraTransform.forward, out hit, _maxGrappleDistance, _whatIsGrappable))
         {
             //Grapple Hit
             _swingPoint = hit.point;
 
+
             //Grapple Animation
+            //_grapplingGun.DoGrapple(_swingPoint);
 
             Invoke(nameof(ExecuteSwing), _swingDelayTime);
         }
@@ -1080,8 +1098,23 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private void StopGrappleSwing()
     {
         _isSwinging = false;
+        _isGrappling = false;
 
+        //_grapplingGun.StopGrapple();
         _lr.enabled = false;
+    }
+
+    public Vector3 GetGrapplePoint()
+    {
+        return _swingPoint;
+    }
+    public bool IsGrappling()
+    {
+        return _isGrappling;
+    }
+    public Vector3 GetGunTip()
+    {
+        return _gunTip.position;
     }
     #endregion
 }
