@@ -20,6 +20,8 @@ public class Player : MonoBehaviour
     [Space]
     [SerializeField] private Volume _volume;
     [SerializeField] private StanceVignette _stanceVignette;
+    [SerializeField] private ChromaticAberrationEffect _chromaticAberrationEffect;
+    public ChromaticAberrationEffect ChromaticAberrationEffect => _chromaticAberrationEffect;
 
     private PlayerInputAction _inputAction;
 
@@ -36,6 +38,7 @@ public class Player : MonoBehaviour
         _cameraSpring.Initialize();
         _cameraLean.Initialize();
         _stanceVignette.Initialize(_volume.profile);
+        _chromaticAberrationEffect.Initialize(_volume.profile);
     }
 
     private void OnDestroy()

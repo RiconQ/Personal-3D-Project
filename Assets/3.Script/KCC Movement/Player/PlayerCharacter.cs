@@ -248,7 +248,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             $"Stance : {_currentState.Stance.ToString()}\n" +
             $"Grounded : {_currentState.Grounded}\n" +
             $"Velocity : {_motor.Velocity.magnitude}\n" +
-            $"Jump : {_remainJumpCount} / {_maxJumpCount}";
+            $"Jump : {_remainJumpCount} / {_maxJumpCount}\n" +
+            $"FOV : {Camera.main.fieldOfView}";
 
         debugText.text = $"{debugLog}";
 
@@ -268,7 +269,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         }
 
         Debug.DrawRay(transform.position, _motor.Velocity.normalized * 2, Color.yellow);
-
     }
 
     public void UpdateInput(CharacterInput input, Vector2 moveInput)
@@ -453,6 +453,9 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                     // Continue sliding
                     else
                     {
+
+                        _playerCamera.DoFov(100f);
+
                         //Friction
                         currentVelocity -= currentVelocity * (_slideFriction * deltaTime);
 
@@ -505,6 +508,14 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                     }
                     else
                     {
+                        if (_motor.Velocity.magnitude > 50)
+                        {
+                            _playerCamera.DoFov(100f);
+                        }
+                        else
+                        {
+                            _playerCamera.DoFov(80f);
+                        }
                         _timeSinceUngrounded += deltaTime;
 
                         // Air Move
@@ -809,6 +820,11 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         {
             StopGrappleSwing();
         }
+        if(_currentState.Stance == EStance.Stand || _currentState.Stance == EStance.Crouch)
+        {
+            if (_motor.Velocity.magnitude < 40f)
+                _playerCamera.DoFov(80f);
+        }
     }
     public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
@@ -910,7 +926,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         _isWallRunning = true;
 
         // Change Fov
-        _playerCamera.DoFov(90f);
+        _playerCamera.DoFov(100f);
         // Do Tilt
         if (_isWallRight) _playerCamera.DoTilt(_cameraZTilt);
         if (_isWallLeft) _playerCamera.DoTilt(-_cameraZTilt);
@@ -1105,12 +1121,14 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     private void ExecuteSwing()
     {
+        _playerCamera.DoFov(100f);
         _isSwinging = true;
         ResetJumpCount();
     }
 
     private void StopGrappleSwing()
     {
+        _playerCamera.DoFov(80f);
         _isSwinging = false;
         _isGrappling = false;
 
@@ -1148,6 +1166,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             case EState.Default:
                 break;
             case EState.Dash:
+                _playerCamera.DoFov(100f);
                 _currentDashVelocity = _cameraTransform.forward * _dashSpeed;
                 _currentDashVelocity =
                     _currentDashVelocity.magnitude > _motor.Velocity.magnitude
@@ -1165,6 +1184,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             case EState.Default:
                 break;
             case EState.Dash:
+                _playerCamera.DoFov(80f);
                 _dashCooldownTimer = _dashCooldownTime;
                 break;
         }

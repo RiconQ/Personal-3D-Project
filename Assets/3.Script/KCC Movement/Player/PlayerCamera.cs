@@ -10,6 +10,8 @@ public class PlayerCamera : MonoBehaviour
 {
     private Camera _mainCamera;
 
+    [SerializeField]private Player _player;
+
     [Header("Mouse Sensitivity")]
     [SerializeField] private float _sensitivity = 0.1f;
 
@@ -39,6 +41,15 @@ public class PlayerCamera : MonoBehaviour
     public void DoFov(float endValue)
     {
         _mainCamera.DOFieldOfView(endValue, 0.25f);
+        if(endValue > 90f)
+        {
+            _player.ChromaticAberrationEffect.ActiveChromatic(true);
+            _player.ChromaticAberrationEffect.SetIntensity(1f);
+        }
+        else
+        {
+            _player.ChromaticAberrationEffect.ActiveChromatic(false);
+        }
     }
 
     public void DoTilt(float zTilt)
