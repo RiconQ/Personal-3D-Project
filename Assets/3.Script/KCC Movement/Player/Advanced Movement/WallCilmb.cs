@@ -94,6 +94,7 @@ public class WallCilmb : MonoBehaviour
     private void StartClimbing()
     {
         //Reset JumpCount
+        _pm.ResetJumpCount();
 
         _isClimbing = true;
 

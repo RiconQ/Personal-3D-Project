@@ -129,6 +129,7 @@ public class WallRunning : MonoBehaviour
     private void StartWallRun()
     {
         //Reset JumpCount
+        _pm.ResetJumpCount();
 
         _isWallRunning = true;
 

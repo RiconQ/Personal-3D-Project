@@ -105,6 +105,7 @@ public class GrapplingSwing : MonoBehaviour
         //DoFov
         _isSwinging = true;
         //Reset JumpCount
+        _pm.ResetJumpCount();
     }
 
     public void StopGrapplingSwing()

@@ -39366,6 +39366,26 @@ PrefabInstance:
       propertyPath: _graplingSwing
       value: 
       objectReference: {fileID: 297161814}
+    - target: {fileID: 3309189748936148791, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
+        type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 3659315575064225990, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
+        type: 3}
+      propertyPath: near clip plane
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 4735590952061961709, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
+        type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 4804983778455825961, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
+        type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 7267121581070245347, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
         type: 3}
       propertyPath: debugText
@@ -39445,6 +39465,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913764303680734329, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
+        type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 1334922018595488622, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7, type: 3}

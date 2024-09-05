@@ -777,7 +777,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         }
     }
 
-    private void ResetJumpCount()
+    public void ResetJumpCount()
     {
         _remainJumpCount = _maxJumpCount;
     }
