@@ -4,6 +4,7 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static UnityEditor.PlayerSettings.SplashScreen;
 
 public enum ECrouchInput
 {
@@ -64,6 +65,15 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private Transform _root;
     [SerializeField] private Transform _cameraTarget;
     [SerializeField] private PlayerCamera _playerCamera;
+    [SerializeField] private Transform _cameraTransform;
+    [SerializeField] private Transform _gunTip;
+    public Transform GunTip => _gunTip;
+    [SerializeField] private LineRenderer _lr;
+
+    [Header("Movement Reference")]
+    [SerializeField] private WallRunning _wallRunning;
+    [SerializeField] private WallCilmb _wallClimb;
+    [SerializeField] private GrapplingSwing _grapplingSwing;
 
     [Space]
     [Header("Movement")]
@@ -83,29 +93,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private float _timeSinceDash = 0f;
     private Vector3 _currentDashVelocity;
 
-    [Header("Wall Running, Wall Jumping")]
-    [SerializeField] private LayerMask _whatIsWall;
-    [SerializeField] private LayerMask _whatIsGround;
-    [SerializeField] private float _cameraZTilt = 7.5f;
-    [Space]
-    [SerializeField] private float _wallRunSpeed = 30f;
-    [SerializeField] private float _wallJumpForce = 10f;
-    [SerializeField] private float _wallSideJumpForce = 10f;
-    [Space]
     [SerializeField] private float _exitWallTime = 0.2f;
-    [Space]
-    [SerializeField] private bool _useWallCounterForce = true;
-    [SerializeField] private float _wallCounterForce = 10f;
-
-    [Header("Wall Climb, Wall Climb Jump")]
-    [SerializeField] private float _climbSpeed = 10f;
-    [SerializeField] private float _maxClimbTime = 2.5f;
-    [Space]
-    [SerializeField] private float _climbJumpUpForce = 10f;
-    [SerializeField] private float _climbJumpBackForce = 10f;
-
-    [Header("Wall Detection - Wall Run")]
-    [SerializeField] private float _wallRunDetectionDistance = 1f;
+    public float ExitWallTime => _exitWallTime;
 
     [Header("Wall Detection - Wall Climb")]
     [SerializeField] private float _wallClimbDetectionDistance = 1f;
@@ -142,16 +131,15 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [Range(0f, 1f)]
     [SerializeField] private float _crouchCameraTargetHeight = 0.7f;
 
-    [Header("GrapplingSwing")]
-    [SerializeField] private LineRenderer _lr;
-    [SerializeField] private Transform _cameraTransform;
-    [SerializeField] private Transform _gunTip;
-    [Space]
-    [SerializeField] private LayerMask _whatIsGrappable;
-    [SerializeField] private float _maxGrappleDistance = 50f;
-    [SerializeField] private float _swingDelayTime = 0.25f;
-    [SerializeField] private float _swingCooldownTime = 0.25f;
-    [SerializeField] private float _swingForce = 2f;
+    //[Header("GrapplingSwing")]
+    //[SerializeField] private LineRenderer _lr;
+    //[SerializeField] private Transform _gunTip;
+    //[Space]
+    //[SerializeField] private LayerMask _whatIsGrappable;
+    //[SerializeField] private float _maxGrappleDistance = 50f;
+    //[SerializeField] private float _swingDelayTime = 0.25f;
+    //[SerializeField] private float _swingCooldownTime = 0.25f;
+    //[SerializeField] private float _swingForce = 2f;
 
     private CharacterState _currentState;
     private CharacterState _lastState;
@@ -160,6 +148,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     // Input
     private RequestedInput _requestedInput;
     private Vector2 _moveInput;
+    public Vector2 MoveInput => _moveInput;
 
     #region Code Variables
     // Jump
@@ -168,44 +157,18 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private bool _ungroundedDueToJump;
     private int _remainJumpCount;
 
-    #region Wall Run
-    // Wall Detection
-    private RaycastHit _rightWallHit;
-    private RaycastHit _leftWallHit;
-    private bool _isWallRight;
-    private bool _isWallLeft;
+    [HideInInspector] public bool isExitingWall;
+    [HideInInspector] public float exitWallTimer;
 
-    // Wall Run
-    private bool _isWallRunning;
-    private bool _isExitingWall;
-    private float _exitWallTimer;
-    #endregion Wall Run
-
-    #region Wall Climb
-    // Wall Detection
-    private float _wallLockAngle;
-
-    private GameObject _lastWall;
-    private Vector3 _lastWallNormal;
-
-    private RaycastHit _frontWallHit;
-    private bool _isWallFront;
-
-    // Wall Climb
-    private float _climbTimer;
-    private bool _isClimbing;
-
-
-    #endregion Wall Climb
 
     private Collider[] _uncrouchOverlapResults;
 
     #region Grapple Swing
-    private Vector3 _swingPoint;
-    private float _swingCooldownTimer;
-    private bool _isGrappling;
-    private bool _isSwinging;
-    private Vector3 _characterToRopeAttachPoint;
+    //private Vector3 _swingPoint;
+    //private float _swingCooldownTimer;
+    //private bool _isGrappling;
+    //private bool _isSwinging;
+    //private Vector3 _characterToRopeAttachPoint;
     #endregion Grapple Swing
 
     #endregion Code Variables
@@ -214,6 +177,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     public TMP_Text debugText;
 
     #endregion Variables
+
+    public KinematicCharacterMotor Motor => _motor;
 
     public void Initialize()
     {
@@ -228,14 +193,9 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     private void ResetVariables()
     {
-        //reset wallRun var
-        _isWallLeft = false;
-        _isWallRight = false;
-        _isWallRunning = false;
-        _isExitingWall = false;
-        _isSwinging = false;
-        _lr.enabled = false;
-        _isGrappling = false;
+        isExitingWall = false;
+        //_isSwinging = false;
+        //_lr.enabled = false;
         _remainJumpCount = _maxJumpCount;
     }
 
@@ -252,20 +212,13 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             $"FOV : {Camera.main.fieldOfView}";
 
         debugText.text = $"{debugLog}";
-
-        WallRunCheck();
-        WallRunState();
-
-        WallClimbCheck();
-        WallClimbState();
     }
 
     private void LateUpdate()
     {
-        if (_isGrappling || _isSwinging)
+        if (_grapplingSwing.IsGrappling || _grapplingSwing.IsSwing)
         {
             _lr.SetPosition(0, _gunTip.position);
-            //Debug.DrawRay(transform.position, -_characterToRopeAttachPoint.normalized * _characterToRopeAttachPoint.magnitude, Color.blue);
         }
 
         Debug.DrawRay(transform.position, _motor.Velocity.normalized * 2, Color.yellow);
@@ -319,12 +272,11 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         #region Grappling Swing
         _requestedInput.GrapplingSwing = input.GrapplingSwing;
         if (_requestedInput.GrapplingSwing && !_motor.GroundingStatus.IsStableOnGround)
-        //if (_requestedInput.GrapplingSwing)
         {
-            if (!_isSwinging)
-                StartGrappleSwing();
+            if (!_grapplingSwing.IsSwing && !_grapplingSwing.IsGrappling)
+                _grapplingSwing.StartGrapplingSwing();
             else
-                StopGrappleSwing();
+                _grapplingSwing.StopGrapplingSwing();
         }
         #endregion
 
@@ -372,10 +324,10 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                 // If player on Ground
                 if (_motor.GroundingStatus.IsStableOnGround)
                 {
-                    if (_isClimbing)
+                    if (_wallClimb.IsClimbing)
                     {
                         //Debug.Log("Ground WallClimb");
-                        ClimbingMovement(ref currentVelocity, deltaTime);
+                        _wallClimb.ClimbingMovement(ref currentVelocity);
                     }
                     _timeSinceUngrounded = 0f;
                     _ungroundedDueToJump = false;
@@ -497,14 +449,14 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                 // character is in air
                 else
                 {
-                    if (_isWallRunning)
+                    if (_wallRunning.IsWallRunning)
                     {
-                        WallRunningMovement(ref currentVelocity, deltaTime);
+                        _wallRunning.WallRunningMovement(ref currentVelocity);
                     }
-                    else if (_isClimbing)
+                    else if (_wallClimb.IsClimbing)
                     {
                         //Debug.Log("Air WallClimb");
-                        ClimbingMovement(ref currentVelocity, deltaTime);
+                        _wallClimb.ClimbingMovement(ref currentVelocity);
                     }
                     else
                     {
@@ -597,49 +549,9 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
                         currentVelocity += _motor.CharacterUp * effectiveGravity * deltaTime;
 
-                        if (_isSwinging)
+                        if (_grapplingSwing.IsSwing)
                         {
-                            //Debug.Log("Swing Movement - AIR");
-                            //_characterToRopeAttachPoint = transform.position - _swingPoint;
-                            //
-                            //currentVelocity = Vector3.ProjectOnPlane(currentVelocity, _characterToRopeAttachPoint.normalized);
-                            //
-                            //Vector3 nextPos = transform.position + (currentVelocity * deltaTime);
-                            //
-                            //Vector3 anchorPointToNextPos = nextPos - _swingPoint;
-                            //
-                            //Vector3 nextPosCorrect = _swingPoint + anchorPointToNextPos.normalized * _maxGrappleDistance;
-                            //
-                            //Vector3 velocityToNextPos = (nextPosCorrect - transform.position) / deltaTime;
-                            //
-                            //currentVelocity = velocityToNextPos;
-
-                            _characterToRopeAttachPoint = transform.position - _swingPoint;
-
-                            currentVelocity = Vector3.ProjectOnPlane(currentVelocity, _characterToRopeAttachPoint.normalized);
-
-                            Vector3 nextPos = transform.position + (currentVelocity * Time.deltaTime);
-
-                            Vector3 anchorPointToNextPos = nextPos - _swingPoint;
-
-                            float distanceToAnchorPoint = anchorPointToNextPos.magnitude;
-
-                            //Vector3 swingDirection = currentVelocity.normalized;
-                            //
-                            //currentVelocity += swingDirection * _swingForce * deltaTime;
-
-                            if (distanceToAnchorPoint > _maxGrappleDistance)
-                            {
-                                Vector3 nextPosCorrected = _swingPoint + (anchorPointToNextPos.normalized * _maxGrappleDistance);
-
-                                currentVelocity = (nextPosCorrected - transform.position) / deltaTime;
-                                currentVelocity = Vector3.Lerp(currentVelocity, (nextPosCorrected - transform.position) / deltaTime, 0.1f);
-                            }
-                            else
-                            {
-                                currentVelocity = Vector3.ProjectOnPlane(currentVelocity, anchorPointToNextPos.normalized);
-                            }
-
+                            _grapplingSwing.SwingMovement(ref currentVelocity, deltaTime);
                         }
                     }
                 }
@@ -649,31 +561,31 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                     var grounded = _motor.GroundingStatus.IsStableOnGround;
                     var canCoyoteJump = _timeSinceUngrounded < _coyoteTime && !_ungroundedDueToJump;
 
-                    if (_isSwinging && !grounded)
+                    if (_grapplingSwing.IsSwing && !grounded)
                     {
                         _remainJumpCount = 1;
                         _requestedInput.Jump = false;     //Unset jump request
                         _requestedInput.Crouch = false;   // and request the character uncrouch
                         _requestedInput.CrouchInAir = false;
-                        StopGrappleSwing();
+                        _grapplingSwing.StopGrapplingSwing();
                     }
 
-                    else if (_isWallRunning)
+                    else if (_wallRunning.IsWallRunning)
                     {
                         _remainJumpCount--;
                         _requestedInput.Jump = false;     //Unset jump request
                         _requestedInput.Crouch = false;   // and request the character uncrouch
                         _requestedInput.CrouchInAir = false;
-                        WallJump(ref currentVelocity, deltaTime);
+                        _wallRunning.WallJump(ref currentVelocity);
                     }
 
-                    else if (_isClimbing)
+                    else if (_wallClimb.IsClimbing)
                     {
                         _remainJumpCount--;
                         _requestedInput.Jump = false;     //Unset jump request
                         _requestedInput.Crouch = false;   // and request the character uncrouch
                         _requestedInput.CrouchInAir = false;
-                        ClimbJump(ref currentVelocity, deltaTime);
+                        _wallClimb.ClimbJump(ref currentVelocity);
                     }
 
                     else if (grounded || canCoyoteJump || _remainJumpCount > 0)
@@ -816,11 +728,11 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     public void OnGroundHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
-        if (_isSwinging)
+        if (_grapplingSwing.IsSwing)
         {
-            StopGrappleSwing();
+            _grapplingSwing.StopGrapplingSwing();
         }
-        if(_currentState.Stance == EStance.Stand || _currentState.Stance == EStance.Crouch)
+        if (_currentState.Stance == EStance.Stand || _currentState.Stance == EStance.Crouch)
         {
             if (_motor.Velocity.magnitude < 40f)
                 _playerCamera.DoFov(80f);
@@ -831,9 +743,9 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         if (hitStabilityReport.IsStable)
         { ResetJumpCount(); }
 
-        if (_isSwinging)
+        if (_grapplingSwing.IsSwing)
         {
-            StopGrappleSwing();
+            _grapplingSwing.StopGrapplingSwing();
         }
     }
     public bool IsColliderValidForCollisions(Collider coll)
@@ -870,285 +782,14 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         _remainJumpCount = _maxJumpCount;
     }
 
-    #region Wall Run
-
-    private void WallRunState()
-    {
-        if ((_isWallLeft || _isWallRight) && _moveInput.y > 0 && AboveGound() && !_isExitingWall)
-        {
-            if (!_isWallRunning)
-            {
-                StartWallRun();
-            }
-        }
-        else if (_isExitingWall)
-        {
-            if (_isWallRunning)
-                StopWallRun();
-
-            if (_exitWallTimer > 0)
-                _exitWallTimer -= Time.deltaTime;
-
-            if (_exitWallTimer <= 0)
-                _isExitingWall = false;
-        }
-        else
-        {
-            if (_isWallRunning)
-                StopWallRun();
-        }
-    }
-
-    /// <summary>
-    /// Check Wall is left or right
-    /// </summary>
-    private void WallRunCheck()
-    {
-
-        //Debug.Log("CheckWall");
-        _isWallRight = Physics.Raycast(transform.position, transform.right, out _rightWallHit, _wallRunDetectionDistance, _whatIsWall);
-        _isWallLeft = Physics.Raycast(transform.position, -transform.right, out _leftWallHit, _wallRunDetectionDistance, _whatIsWall);
-    }
-
     /// <summary>
     /// Check Is Player is not StableGround
     /// </summary>
     /// <returns></returns>
-    private bool AboveGound()
+    public bool AboveGound()
     {
         return !_motor.GroundingStatus.IsStableOnGround;
     }
-
-    private void StartWallRun()
-    {
-        ResetJumpCount();
-        //Debug.Log("Start WallRun");
-        _isWallRunning = true;
-
-        // Change Fov
-        _playerCamera.DoFov(100f);
-        // Do Tilt
-        if (_isWallRight) _playerCamera.DoTilt(_cameraZTilt);
-        if (_isWallLeft) _playerCamera.DoTilt(-_cameraZTilt);
-    }
-
-    private void WallRunningMovement(ref Vector3 currentVelocity, float deltaTime)
-    {
-        var wallNoramal = _isWallRight ? _rightWallHit.normal : _leftWallHit.normal;
-        var wallForward = Vector3.Cross(wallNoramal, transform.up);
-
-        // Modify Wall Forward to correct direction
-        if ((transform.forward - wallForward).magnitude > (transform.forward - -wallForward).magnitude)
-            wallForward = -wallForward;
-
-        //currentVelocity = wallForward * _wallRunSpeed;
-
-        {
-            Vector3 horizontalVelocity = new Vector3(currentVelocity.x, 0, currentVelocity.z);
-
-            //Blend Wall run speed and player current horizontal speed
-            float blendFactor = 0.1f;
-            currentVelocity = Vector3.Lerp(horizontalVelocity, wallForward * _wallRunSpeed, blendFactor);
-        }
-
-        // Add Velocity for Stick on wall
-        if (_useWallCounterForce)
-        {
-            if (!(_isWallLeft && _moveInput.x > 0) && !(_isWallRight && _moveInput.x < 0))
-                currentVelocity += -wallNoramal * _wallCounterForce;
-        }
-        currentVelocity.y = 0f;
-    }
-
-    private void WallJump(ref Vector3 currentVelocity, float deltaTime)
-    {
-        _isExitingWall = true;
-        _exitWallTimer = _exitWallTime;
-
-        Vector3 wallNormal = _isWallRight ? _rightWallHit.normal : _leftWallHit.normal;
-        Vector3 forceToApply = _motor.CharacterUp * _wallJumpForce + wallNormal * _wallSideJumpForce;
-
-        //test
-        // Unstick Player from the ground
-        _motor.ForceUnground(time: 0f);
-        _ungroundedDueToJump = true;
-
-        // Set Minimum Vertical Speed to the Jump Speed
-        var currentVerticalSpeed = Vector3.Dot(currentVelocity, _motor.CharacterUp);
-        var targetVerticalSpeed = Mathf.Max(currentVerticalSpeed, _wallJumpForce);
-
-        // Add the difference in current and target vertical speed to the character's velocity
-        currentVelocity += forceToApply * (targetVerticalSpeed - currentVerticalSpeed);
-    }
-    private void StopWallRun()
-    {
-        _isWallRunning = false;
-
-        //Change Fov
-        _playerCamera.DoFov(80f);
-        //reset Tilt
-        _playerCamera.DoTilt(0f);
-    }
-    #endregion
-
-    #region Wall Climb, Climb Jump
-    private void WallClimbCheck()
-    {
-        //_isWallFront = Physics.SphereCast(transform.position, _sphereCastRadius, transform.forward, out _frontWallHit, _wallClimbDetectionDistance, _whatIsWall);
-        _isWallFront = Physics.Raycast(transform.position, transform.forward, out _frontWallHit, _wallClimbDetectionDistance, _whatIsWall);
-        //Debug.Log(_isWallFront);
-        _wallLockAngle = Vector3.Angle(transform.forward, -_frontWallHit.normal);
-
-        bool newWall = _frontWallHit.transform != _lastWall ||
-            Math.Abs(Vector3.Angle(_lastWallNormal, _frontWallHit.normal)) > _minWallNormalAngleChange;
-
-        if ((_isWallFront && newWall) || !AboveGound())
-        {
-            _climbTimer = _maxClimbTime;
-            //Set Max Jump Count
-        }
-    }
-
-    private void WallClimbState()
-    {
-        if ((_isWallFront && (_moveInput.y > 0)) && _wallLockAngle < _maxWallLockAngle && !_isExitingWall)
-        {
-            if (!_isClimbing && _climbTimer > 0) StartClimbing();
-
-            if (_climbTimer > 0)
-                _climbTimer -= Time.deltaTime;
-            if (_climbTimer < 0)
-                StopClimbing();
-        }
-        else if (_isExitingWall)
-        {
-            if (_isClimbing)
-                StopClimbing();
-
-            if (_exitWallTimer > 0)
-                _exitWallTimer -= Time.deltaTime;
-            if (_exitWallTimer < 0)
-                _isExitingWall = false;
-        }
-        else
-        {
-            if (_isClimbing)
-            {
-                //Debug.Log($"wall Front : {_isWallFront}");
-                //Debug.Log($"move : {(_moveInput.y > 0)}");
-                StopClimbing();
-            }
-        }
-    }
-
-    private void StartClimbing()
-    {
-        ResetJumpCount();
-        //Debug.Log("Start Climbing");
-        _isClimbing = true;
-
-        _lastWall = _frontWallHit.transform.gameObject;
-        _lastWallNormal = _frontWallHit.normal;
-    }
-
-    private void ClimbingMovement(ref Vector3 currentVelocity, float deltaTime)
-    {
-
-        currentVelocity = new Vector3(0, _climbSpeed, _motor.Velocity.z);
-    }
-
-    private void StopClimbing()
-    {
-        //Debug.Log("Stop Climbing");
-        _isClimbing = false;
-    }
-
-    private void ClimbJump(ref Vector3 currentVelocity, float deltaTime)
-    {
-        _isExitingWall = true;
-        _exitWallTimer = _exitWallTime;
-
-        // jump Force to Apply
-
-        Vector3 forceToApply = transform.up * _climbJumpUpForce +
-            _frontWallHit.normal * _climbJumpBackForce;
-
-        currentVelocity = new Vector3(_motor.Velocity.x, 0f, _motor.Velocity.z);
-
-        //test
-        // Unstick Player from the ground
-        _motor.ForceUnground(time: 0f);
-        _ungroundedDueToJump = true;
-
-        // Set Minimum Vertical Speed to the Jump Speed
-        var currentVerticalSpeed = Vector3.Dot(currentVelocity, _motor.CharacterUp);
-        var targetVerticalSpeed = Mathf.Max(currentVerticalSpeed, _wallJumpForce);
-
-        // Add the difference in current and target vertical speed to the character's velocity
-        currentVelocity += forceToApply * (targetVerticalSpeed - currentVerticalSpeed);
-    }
-    #endregion
-
-    #region Grapple Swing
-    private void StartGrappleSwing()
-    {
-        RaycastHit hit;
-        _isGrappling = true;
-
-        if (Physics.SphereCast(_cameraTransform.position, 5f, _cameraTransform.forward, out hit, _maxGrappleDistance, _whatIsGrappable))
-        {
-            //Grapple Hit
-            _swingPoint = hit.point;
-
-
-            //Grapple Animation
-            //_grapplingGun.DoGrapple(_swingPoint);
-
-            Invoke(nameof(ExecuteSwing), _swingDelayTime);
-        }
-        else
-        {
-            _swingPoint = _cameraTransform.position + _cameraTransform.forward * _maxGrappleDistance;
-
-            //Grapple Animation;
-
-            Invoke(nameof(StopGrappleSwing), _swingDelayTime);
-        }
-
-        _lr.enabled = true;
-        _lr.SetPosition(1, _swingPoint);
-    }
-
-    private void ExecuteSwing()
-    {
-        _playerCamera.DoFov(100f);
-        _isSwinging = true;
-        ResetJumpCount();
-    }
-
-    private void StopGrappleSwing()
-    {
-        _playerCamera.DoFov(80f);
-        _isSwinging = false;
-        _isGrappling = false;
-
-        //_grapplingGun.StopGrapple();
-        _lr.enabled = false;
-    }
-
-    public Vector3 GetGrapplePoint()
-    {
-        return _swingPoint;
-    }
-    public bool IsGrappling()
-    {
-        return _isGrappling;
-    }
-    public Vector3 GetGunTip()
-    {
-        return _gunTip.position;
-    }
-    #endregion
 
     #region Character State
     private void ChangeState(EState newState)

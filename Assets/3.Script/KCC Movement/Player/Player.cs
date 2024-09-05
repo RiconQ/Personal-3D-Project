@@ -8,6 +8,9 @@ public class Player : MonoBehaviour
 {
     [Header("Player Movement")]
     [SerializeField] private PlayerCharacter _playerCharacter;
+    [SerializeField] private WallRunning _wallRunning;
+    [SerializeField] private WallCilmb _wallClimb;
+    [SerializeField] private GrapplingSwing _graplingSwing;
 
     [Header("Camera")]
     [SerializeField] private PlayerCamera _playerCamera;
@@ -32,9 +35,16 @@ public class Player : MonoBehaviour
         _inputAction = new PlayerInputAction();
         _inputAction.Enable();
 
+        //Character Movement
         _playerCharacter.Initialize();
+        _wallRunning.Initialize(_playerCharacter);
+        _wallClimb.Initialize(_playerCharacter);
+        _graplingSwing.Initialize(_playerCharacter);
+
+        //Camera
         _playerCamera.Initialize(_playerCharacter.GetCameraTarget());
 
+        //FX
         _cameraSpring.Initialize();
         _cameraLean.Initialize();
         _stanceVignette.Initialize(_volume.profile);
@@ -84,6 +94,9 @@ public class Player : MonoBehaviour
             }
         }
         #endif
+
+        _wallRunning.UpdateWallRun(deltaTime);
+        _wallClimb.UpdateWallClimb(deltaTime);
     }
 
     private void LateUpdate()
