@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using DG.Tweening.Core.Easing;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
@@ -11,7 +10,8 @@ public class Player : MonoBehaviour
     [SerializeField] private WallRunning _wallRunning;
     [SerializeField] private WallCilmb _wallClimb;
     [SerializeField] private GrapplingSwing _graplingSwing;
-
+    [SerializeField] private Dash _dash;
+ 
     [Header("Camera")]
     [SerializeField] private PlayerCamera _playerCamera;
 
@@ -40,6 +40,7 @@ public class Player : MonoBehaviour
         _wallRunning.Initialize(_playerCharacter);
         _wallClimb.Initialize(_playerCharacter);
         _graplingSwing.Initialize(_playerCharacter);
+        _dash.Initialize(_playerCharacter);
 
         //Camera
         _playerCamera.Initialize(_playerCharacter.GetCameraTarget());
@@ -97,6 +98,7 @@ public class Player : MonoBehaviour
 
         _wallRunning.UpdateWallRun(deltaTime);
         _wallClimb.UpdateWallClimb(deltaTime);
+        _dash.UpdateDash(deltaTime);
     }
 
     private void LateUpdate()

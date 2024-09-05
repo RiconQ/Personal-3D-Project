@@ -1984,6 +1984,22 @@ MonoBehaviour:
   _maxGrappleDistance: 100
   _swingDelayTime: 0.25
   _swingForce: 1
+--- !u!114 &297161815
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 297161807}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4cbd65bbadd4d44cbf74a8451e30c08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _playerCamera: {fileID: 1491493088}
+  _dashDistance: 30
+  _dashSpeed: 1000
+  _dashCooldownTime: 0.4
 --- !u!1 &333199833
 GameObject:
   m_ObjectHideFlags: 0
@@ -39353,6 +39369,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2279365697877538541, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
         type: 3}
+      propertyPath: _dash
+      value: 
+      objectReference: {fileID: 297161815}
+    - target: {fileID: 2279365697877538541, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
+        type: 3}
       propertyPath: _wallClimb
       value: 
       objectReference: {fileID: 297161813}
@@ -39386,6 +39407,11 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 6
       objectReference: {fileID: 0}
+    - target: {fileID: 7267121581070245347, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
+        type: 3}
+      propertyPath: _dash
+      value: 
+      objectReference: {fileID: 297161815}
     - target: {fileID: 7267121581070245347, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
         type: 3}
       propertyPath: debugText
@@ -39488,6 +39514,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 297161814}
+    - targetCorrespondingSourceObject: {fileID: 3309189748936148791, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 297161815}
   m_SourcePrefab: {fileID: 100100000, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7, type: 3}
 --- !u!1 &809517882
 GameObject:

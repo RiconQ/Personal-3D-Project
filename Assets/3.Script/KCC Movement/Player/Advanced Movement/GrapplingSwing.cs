@@ -38,14 +38,6 @@ public class GrapplingSwing : MonoBehaviour
         _gunTip = _pm.GunTip;
     }
 
-    //public void LateUpdate()
-    //{
-    //    if (_isSwinging || _isGrappling)
-    //    {
-    //        _lr.SetPosition(0, _gunTip.position);
-    //    }
-    //}
-
     public void StartGrapplingSwing()
     {
         RaycastHit hit;
