@@ -49,7 +49,7 @@ public class WallRunning : MonoBehaviour
     {
         if ((_isWallLeft || _isWallRight) && _pm.MoveInput.y > 0 && _pm.AboveGound() && !_pm.isExitingWall)
         {
-            if (!_isWallRunning)
+            if (!_isWallRunning && _pm.CurrentState.Stance == EStance.Stand)
             {
                 StartWallRun();
             }

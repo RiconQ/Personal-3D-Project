@@ -14,14 +14,15 @@ public class GrapplingSwing : MonoBehaviour
     [SerializeField] private float _grappleDetectionSize = 3f;
     [SerializeField] private float _maxGrappleDistance = 100f;
     [SerializeField] private float _swingDelayTime = 0.25f;
-    //[SerializeField] private float _swingCooldownTime = 0.25f;
+    [SerializeField] private float _maxSwingSpeed = 110f;
     [SerializeField] private float _swingForce = 1f;
 
     //reference
     private PlayerCharacter _pm;
-    
+
     // grapllingSwing
     private Vector3 _swingPoint;
+    private Vector3 _startCharacterPosition;
     //private float _swingCooldownTimer;
     private Vector3 _characterToSwingPoint; //Vector character to swingPoint
 
@@ -47,7 +48,7 @@ public class GrapplingSwing : MonoBehaviour
         {
             //GrappleHit
             _swingPoint = hit.point;
-
+            _startCharacterPosition = transform.position;
             //Grapple Animation
 
             Invoke(nameof(ExecuteSwing), _swingDelayTime);
@@ -71,6 +72,10 @@ public class GrapplingSwing : MonoBehaviour
     {
         _characterToSwingPoint = transform.position - _swingPoint;
 
+        Vector3 swingDirection = _characterToSwingPoint.normalized;
+        currentVelocity += swingDirection * _swingForce * deltaTime;
+
+
         currentVelocity = Vector3.ProjectOnPlane(currentVelocity, _characterToSwingPoint.normalized);
 
         Vector3 nextPos = transform.position + (currentVelocity * deltaTime);
@@ -78,6 +83,8 @@ public class GrapplingSwing : MonoBehaviour
         Vector3 anchorPointToNextPos = nextPos - _swingPoint;
 
         float distanceToAnchorPoint = anchorPointToNextPos.magnitude;
+
+
 
         if (distanceToAnchorPoint > _maxGrappleDistance)
         {
@@ -113,4 +120,12 @@ public class GrapplingSwing : MonoBehaviour
     {
         _lr.SetPosition(index, position);
     }
+
+    //public bool Check180Degree()
+    //{
+    //    Vector3 swingDirection = (_swingPoint - transform.position).normalized;
+    //    float angleFromVertical = Vector3.Angle(Vector3.down, swingDirection);
+    //    if (angleFromVertical > 180f) return true;
+    //    else return false;
+    //}
 }

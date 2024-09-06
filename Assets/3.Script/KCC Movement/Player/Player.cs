@@ -11,6 +11,7 @@ public class Player : MonoBehaviour
     [SerializeField] private WallCilmb _wallClimb;
     [SerializeField] private GrapplingSwing _graplingSwing;
     [SerializeField] private Dash _dash;
+    [SerializeField] private CrouchSlam _crouchSlam;
  
     [Header("Camera")]
     [SerializeField] private PlayerCamera _playerCamera;
@@ -41,12 +42,12 @@ public class Player : MonoBehaviour
         _wallClimb.Initialize(_playerCharacter);
         _graplingSwing.Initialize(_playerCharacter);
         _dash.Initialize(_playerCharacter);
-
+        _crouchSlam.Initialize(_playerCharacter);
         //Camera
         _playerCamera.Initialize(_playerCharacter.GetCameraTarget());
 
         //FX
-        _cameraSpring.Initialize();
+        _cameraSpring.Initialize(_playerCharacter);
         _cameraLean.Initialize();
         _stanceVignette.Initialize(_volume.profile);
         _chromaticAberrationEffect.Initialize(_volume.profile);

@@ -15,8 +15,10 @@ public class CameraSpring : MonoBehaviour
     private Vector3 _springPosition;
     private Vector3 _springVelocity;
 
-    public void Initialize()
+    private PlayerCharacter _pm;
+    public void Initialize(PlayerCharacter pm)
     {
+        _pm = pm;
         _springPosition = transform.position;
         _springVelocity = Vector3.zero;
     }
@@ -29,8 +31,13 @@ public class CameraSpring : MonoBehaviour
 
         var localSpringPosition = _springPosition - transform.position;
         var springHeight = Vector3.Dot(localSpringPosition, up);
-
-        transform.localEulerAngles = new Vector3(-springHeight * _angularDisplacement, 0f, 0f);
+        if (_pm.IsDashing())
+        {
+            transform.localEulerAngles = new Vector3(0f, 0f, 0f);
+            Debug.Log("asdas");
+        }
+        else
+            transform.localEulerAngles = new Vector3(-springHeight * _angularDisplacement, 0f, 0f);
         transform.localPosition = localSpringPosition * _linearDisplacement;
     }
 

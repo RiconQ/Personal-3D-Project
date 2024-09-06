@@ -4458,6 +4458,21 @@ PrefabInstance:
       propertyPath: debugText
       value: 
       objectReference: {fileID: 1749020502}
+    - target: {fileID: 7267121581070245347, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
+        type: 3}
+      propertyPath: _walkSpeed
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 7267121581070245347, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
+        type: 3}
+      propertyPath: _slideStartSpeed
+      value: 35
+      objectReference: {fileID: 0}
+    - target: {fileID: 7267121581070245347, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
+        type: 3}
+      propertyPath: _jumpSustainGravity
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7708192787418583627, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
         type: 3}
       propertyPath: m_LocalPosition.x
