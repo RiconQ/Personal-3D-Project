@@ -16,6 +16,8 @@ public class GrapplingSwing : MonoBehaviour
     [SerializeField] private float _swingDelayTime = 0.25f;
     [SerializeField] private float _maxSwingSpeed = 110f;
     [SerializeField] private float _swingForce = 1f;
+    [Space]
+    [SerializeField] private float _swingJumpForce = 5f;
 
     //reference
     private PlayerCharacter _pm;
@@ -97,6 +99,10 @@ public class GrapplingSwing : MonoBehaviour
         {
             currentVelocity = Vector3.ProjectOnPlane(currentVelocity, anchorPointToNextPos.normalized);
         }
+    }
+    public void SwingJump(ref Vector3 currentVelocity)
+    {
+        currentVelocity += currentVelocity * _swingJumpForce;
     }
 
     private void ExecuteSwing()

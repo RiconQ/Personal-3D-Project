@@ -341,6 +341,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                             vector: _lastState.Velocity,
                             planeNormal: _motor.GroundingStatus.GroundNormal
                         );
+                        //currentVelocity = _lastState.Velocity;
                     }
 
                     var effectiveSlideStartSpeed = _slideStartSpeed;
@@ -550,6 +551,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                 _requestedInput.Crouch = false;   // and request the character uncrouch
                 _requestedInput.CrouchInAir = false;
                 _grapplingSwing.StopGrapplingSwing();
+                //_grapplingSwing.SwingJump(ref currentVelocity);
             }
 
             else if (_wallRunning.IsWallRunning)

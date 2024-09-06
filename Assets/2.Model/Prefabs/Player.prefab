@@ -508,7 +508,7 @@ MonoBehaviour:
   _grapplingSwing: {fileID: 6431109464135690746}
   _dash: {fileID: 8326221008979930410}
   _crouchSlam: {fileID: 2279562339508728297}
-  _walkSpeed: 35
+  _walkSpeed: 25
   _crouchSpeed: 7
   _walkResponse: 25
   _crouchResponse: 20
@@ -516,9 +516,9 @@ MonoBehaviour:
   _maxJumpCount: 2
   _jumpSpeed: 30
   _coyoteTime: 0.2
-  _jumpSustainGravity: 0.4
+  _jumpSustainGravity: 1
   _gravity: -90
-  _slideStartSpeed: 45
+  _slideStartSpeed: 35
   _slideEndSpeed: 15
   _slideFriction: 0.5
   _slideSteerAcceleration: 5
