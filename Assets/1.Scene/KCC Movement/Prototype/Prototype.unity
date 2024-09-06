@@ -39278,6 +39278,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 6431109464135690746, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
+        type: 3}
+      propertyPath: _swingJumpForce
+      value: 1.5
+      objectReference: {fileID: 0}
     - target: {fileID: 7267121581070245347, guid: 973f24ccd49a1a6439fc43f3a3b5c5b7,
         type: 3}
       propertyPath: debugText
