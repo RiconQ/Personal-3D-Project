@@ -19,6 +19,9 @@ public class PlayerCharacter_Portal : MonoBehaviour, ICharacterController
     [SerializeField] private WallRunning_Portal _wallRunning;
     [SerializeField] private GrapplingSwing_Portal _grapplingSwing;
 
+    [Header("Portal Gun")]
+    [SerializeField] private PortalGun _portalGun;
+
     [Space]
     [Header("Movement")]
     [SerializeField] private float _walkSpeed = 20f;
@@ -178,6 +181,19 @@ public class PlayerCharacter_Portal : MonoBehaviour, ICharacterController
                 _grapplingSwing.StartGrapplingSwing();
             else
                 _grapplingSwing.StopGrapplingSwing();
+        }
+        #endregion
+
+        #region PortalGun
+        _requestedInput.LeftPortal = input.LeftPortal;
+        _requestedInput.RIghtPortal = input.RIghtPortal;
+        if (_requestedInput.LeftPortal)
+        {
+            _portalGun.InputFire(0);
+        }
+        if (_requestedInput.RIghtPortal)
+        {
+            _portalGun.InputFire(1);
         }
         #endregion
     }

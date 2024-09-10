@@ -80,6 +80,24 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""LeftPortal"",
+                    ""type"": ""Button"",
+                    ""id"": ""ead28246-7e13-46f6-a7eb-72cee080a6fe"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""RightPortal"",
+                    ""type"": ""Button"",
+                    ""id"": ""f47b9d8a-3f6f-40e3-a7ff-295280f719c7"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -196,11 +214,33 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""1687c1ce-0fdc-476b-9bd2-41cb9b46f62f"",
-                    ""path"": ""<Mouse>/rightButton"",
+                    ""path"": ""<Keyboard>/q"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""GrapplingSwing"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""29486ec9-0b50-4655-a89b-4f4df88fa670"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LeftPortal"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""be245731-0635-4d4f-86e7-062776b271bb"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""RightPortal"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -217,6 +257,8 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
         m_Player_Crouch = m_Player.FindAction("Crouch", throwIfNotFound: true);
         m_Player_Dash = m_Player.FindAction("Dash", throwIfNotFound: true);
         m_Player_GrapplingSwing = m_Player.FindAction("GrapplingSwing", throwIfNotFound: true);
+        m_Player_LeftPortal = m_Player.FindAction("LeftPortal", throwIfNotFound: true);
+        m_Player_RightPortal = m_Player.FindAction("RightPortal", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -284,6 +326,8 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Crouch;
     private readonly InputAction m_Player_Dash;
     private readonly InputAction m_Player_GrapplingSwing;
+    private readonly InputAction m_Player_LeftPortal;
+    private readonly InputAction m_Player_RightPortal;
     public struct PlayerActions
     {
         private @PlayerInputAction m_Wrapper;
@@ -294,6 +338,8 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
         public InputAction @Crouch => m_Wrapper.m_Player_Crouch;
         public InputAction @Dash => m_Wrapper.m_Player_Dash;
         public InputAction @GrapplingSwing => m_Wrapper.m_Player_GrapplingSwing;
+        public InputAction @LeftPortal => m_Wrapper.m_Player_LeftPortal;
+        public InputAction @RightPortal => m_Wrapper.m_Player_RightPortal;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -321,6 +367,12 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
             @GrapplingSwing.started += instance.OnGrapplingSwing;
             @GrapplingSwing.performed += instance.OnGrapplingSwing;
             @GrapplingSwing.canceled += instance.OnGrapplingSwing;
+            @LeftPortal.started += instance.OnLeftPortal;
+            @LeftPortal.performed += instance.OnLeftPortal;
+            @LeftPortal.canceled += instance.OnLeftPortal;
+            @RightPortal.started += instance.OnRightPortal;
+            @RightPortal.performed += instance.OnRightPortal;
+            @RightPortal.canceled += instance.OnRightPortal;
         }
 
         private void UnregisterCallbacks(IPlayerActions instance)
@@ -343,6 +395,12 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
             @GrapplingSwing.started -= instance.OnGrapplingSwing;
             @GrapplingSwing.performed -= instance.OnGrapplingSwing;
             @GrapplingSwing.canceled -= instance.OnGrapplingSwing;
+            @LeftPortal.started -= instance.OnLeftPortal;
+            @LeftPortal.performed -= instance.OnLeftPortal;
+            @LeftPortal.canceled -= instance.OnLeftPortal;
+            @RightPortal.started -= instance.OnRightPortal;
+            @RightPortal.performed -= instance.OnRightPortal;
+            @RightPortal.canceled -= instance.OnRightPortal;
         }
 
         public void RemoveCallbacks(IPlayerActions instance)
@@ -368,5 +426,7 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
         void OnCrouch(InputAction.CallbackContext context);
         void OnDash(InputAction.CallbackContext context);
         void OnGrapplingSwing(InputAction.CallbackContext context);
+        void OnLeftPortal(InputAction.CallbackContext context);
+        void OnRightPortal(InputAction.CallbackContext context);
     }
 }

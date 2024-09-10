@@ -2,7 +2,7 @@ Shader "Portals/Outline"
 {
     Properties
     {
-		_OutlineColour("Outline Colour", Color) = (1, 1, 1, 1)
+		_OutlineColor("Outline Colour", Color) = (1, 1, 1, 1)
 		_MaskID("Mask ID", Int) = 1
     }
     SubShader
@@ -40,7 +40,7 @@ Shader "Portals/Outline"
                 float4 vertex : SV_POSITION;
             };
 
-			uniform float4 _OutlineColour;
+			uniform float4 _OutlineColor;
 
             v2f vert (appdata v)
             {
@@ -51,7 +51,7 @@ Shader "Portals/Outline"
 
             float4 frag (v2f i) : SV_Target
             {
-                return _OutlineColour;
+                return _OutlineColor;
             }
             ENDHLSL
         }

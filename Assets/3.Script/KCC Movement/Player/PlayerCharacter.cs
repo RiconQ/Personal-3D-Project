@@ -34,6 +34,8 @@ public struct CharacterInput
     public bool JumpSustain;
     public ECrouchInput Crouch;
     public bool GrapplingSwing;
+    public bool LeftPortal;
+    public bool RIghtPortal;
 }
 
 public struct RequestedInput
@@ -46,6 +48,8 @@ public struct RequestedInput
     public bool Crouch;
     public bool CrouchInAir;
     public bool GrapplingSwing;
+    public bool LeftPortal;
+    public bool RIghtPortal;
 }
 
 public class PlayerCharacter : MonoBehaviour, ICharacterController

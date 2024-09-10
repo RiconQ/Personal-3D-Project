@@ -28,8 +28,8 @@ public class PortalCamera : MonoBehaviour
 
     private void Start()
     {
-        _portals[0].renderer.material.mainTexture = _tempTexture1;
-        _portals[1].renderer.material.mainTexture = _tempTexture2;
+        _portals[0].Renderer.material.mainTexture = _tempTexture1;
+        _portals[1].Renderer.material.mainTexture = _tempTexture2;
     }
 
     private void OnEnable()
@@ -49,7 +49,7 @@ public class PortalCamera : MonoBehaviour
             return;
         }
 
-        if (_portals[0].renderer.isVisible)
+        if (_portals[0].Renderer.isVisible)
         {
             _portalCamera.targetTexture = _tempTexture1;
             for (int i = _iteration - 1; i >= 0; --i)
@@ -58,7 +58,7 @@ public class PortalCamera : MonoBehaviour
             }
         }
 
-        if (_portals[1].renderer.isVisible)
+        if (_portals[1].Renderer.isVisible)
         {
             _portalCamera.targetTexture = _tempTexture2;
             for (int i = _iteration - 1; i >= 0; --i)

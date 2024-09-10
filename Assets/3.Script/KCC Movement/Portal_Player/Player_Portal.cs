@@ -9,6 +9,9 @@ public class Player_Portal : MonoBehaviour
     [SerializeField] private WallRunning_Portal _wallRunning;
     [SerializeField] private GrapplingSwing_Portal _graplingSwing;
 
+    [Header("Portal Gun")]
+    [SerializeField] private PortalGun _portalGun;
+
     [Header("Camera")]
     [SerializeField] private PlayerCamera_Portal _playerCamera;
 
@@ -63,7 +66,9 @@ public class Player_Portal : MonoBehaviour
             JumpSustain = input.Jump.IsPressed(),
             Crouch = input.Crouch.WasPressedThisFrame() ?
                             ECrouchInput.Toggle : ECrouchInput.None,
-            GrapplingSwing = input.GrapplingSwing.WasPressedThisFrame()
+            GrapplingSwing = input.GrapplingSwing.WasPressedThisFrame(),
+            LeftPortal = input.LeftPortal.WasPressedThisFrame(),
+            RIghtPortal = input.RightPortal.WasPressedThisFrame()
         };
 
         _playerCharacter.UpdateInput(characterInput, _inputAction.Player.Move.ReadValue<Vector2>());
