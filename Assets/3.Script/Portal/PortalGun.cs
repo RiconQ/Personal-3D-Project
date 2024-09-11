@@ -18,7 +18,7 @@ public class PortalGun : MonoBehaviour
 
     private void FirePortal(int portalID, Vector3 pos, Vector3 dir, float distance)
     {
-        Debug.Log($"Fire Portal {portalID}");
+        //Debug.Log($"Fire Portal {portalID}");
 
         RaycastHit hit;
         Physics.Raycast(pos, dir, out hit, distance, _layerMask);

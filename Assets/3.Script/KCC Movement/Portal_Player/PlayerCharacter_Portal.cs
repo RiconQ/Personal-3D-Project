@@ -1,4 +1,5 @@
 using KinematicCharacterController;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -19,8 +20,9 @@ public class PlayerCharacter_Portal : MonoBehaviour, ICharacterController
     [SerializeField] private WallRunning_Portal _wallRunning;
     [SerializeField] private GrapplingSwing_Portal _grapplingSwing;
 
-    [Header("Portal Gun")]
+    [Header("Portal")]
     [SerializeField] private PortalGun _portalGun;
+    [SerializeField] private PortalablePlayer _portalablePlayer;
 
     [Space]
     [Header("Movement")]
@@ -75,6 +77,8 @@ public class PlayerCharacter_Portal : MonoBehaviour, ICharacterController
 
     private Collider[] _uncrouchOverlapResults;
 
+    private List<Collider> _ignoreColl = new List<Collider>();
+
     #endregion Code Variables
 
     [Header("Debug")]
@@ -83,6 +87,7 @@ public class PlayerCharacter_Portal : MonoBehaviour, ICharacterController
     #endregion Variables
 
     public KinematicCharacterMotor Motor => _motor;
+
 
     public void Initialize()
     {
@@ -93,6 +98,10 @@ public class PlayerCharacter_Portal : MonoBehaviour, ICharacterController
         _motor.CharacterController = this;
 
         ResetVariables();
+
+        //Time.timeScale = 0.3f;
+
+        //Physics.IgnoreCollision(_motor.Capsule, test);
     }
 
     private void ResetVariables()
@@ -108,7 +117,7 @@ public class PlayerCharacter_Portal : MonoBehaviour, ICharacterController
         string debugLog =
             $"Stance : {_currentState.Stance.ToString()}\n" +
             $"Grounded : {_currentState.Grounded}\n" +
-            $"Velocity : {_motor.Velocity.magnitude}\n" +
+            $"Velocity : {_motor.Velocity}\n" +
             $"FOV : {Camera.main.fieldOfView}\n";
 
         debugText.text = $"{debugLog}";
@@ -227,6 +236,13 @@ public class PlayerCharacter_Portal : MonoBehaviour, ICharacterController
     public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
         _currentState.Acceleration = Vector3.zero;
+
+
+        if (_portalablePlayer.IsWarp)
+        {
+            Debug.Log("IsPortal Velocity");
+            _portalablePlayer.WarpVelocity(ref currentVelocity);
+        }
 
         // If player on Ground
         if (_motor.GroundingStatus.IsStableOnGround)
@@ -436,6 +452,12 @@ public class PlayerCharacter_Portal : MonoBehaviour, ICharacterController
 
         if (forward != Vector3.zero)
             currentRotation = Quaternion.LookRotation(forward, _motor.CharacterUp);
+
+        if (_portalablePlayer.IsWarp)
+        {
+            Debug.Log("Isportal Rotation");
+            _portalablePlayer.WarpRotation(ref currentRotation);
+        }
     }
 
 
@@ -507,6 +529,7 @@ public class PlayerCharacter_Portal : MonoBehaviour, ICharacterController
 
     public void OnGroundHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
+
         if (_grapplingSwing.IsSwing)
         {
             _grapplingSwing.StopGrapplingSwing();
@@ -519,6 +542,7 @@ public class PlayerCharacter_Portal : MonoBehaviour, ICharacterController
     }
     public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
+        //Debug.Log("Hit");
         if (_grapplingSwing.IsSwing)
         {
             _grapplingSwing.StopGrapplingSwing();
@@ -526,7 +550,19 @@ public class PlayerCharacter_Portal : MonoBehaviour, ICharacterController
     }
     public bool IsColliderValidForCollisions(Collider coll)
     {
+        if (_ignoreColl.Contains(coll) && _ignoreColl.Count != 0)
+        {
+            return false;
+        }
         return true;
+    }
+
+    public void AddIgnoreColl(Collider coll)
+    {
+        _ignoreColl.Add(coll);
+    }
+    public void RemoveIgnoreColl(Collider coll) { 
+        _ignoreColl.Remove(coll); 
     }
 
     public void OnDiscreteCollisionDetected(Collider hitCollider)

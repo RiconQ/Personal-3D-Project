@@ -98,7 +98,8 @@ public class PortalCamera : MonoBehaviour
         var newMatrix = _mainCamera.CalculateObliqueMatrix(clipPlaneCameraSpace);
         _portalCamera.projectionMatrix = newMatrix;
 
+        
         //Render camera to its render target
-        UniversalRenderPipeline.RenderSingleCamera(SRC, _portalCamera);
+        //UniversalRenderPipeline.RenderSingleCamera(SRC, _portalCamera);
     }
 }

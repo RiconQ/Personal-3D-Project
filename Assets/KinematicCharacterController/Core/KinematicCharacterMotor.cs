@@ -160,7 +160,7 @@ namespace KinematicCharacterController
         /// <summary>
         /// The capsule collider of this motor
         /// </summary>
-        [ReadOnly]
+        //[ReadOnly]
         public CapsuleCollider Capsule;
 
         [Header("Capsule Settings")]

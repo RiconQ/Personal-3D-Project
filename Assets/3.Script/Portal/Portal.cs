@@ -20,6 +20,10 @@ public class Portal : MonoBehaviour
     public Renderer Renderer { get; private set; }
     private new BoxCollider _collider;
 
+    [SerializeField]private bool _isPlayerPortal = false;
+
+    private PortalablePlayer _portalablePortal;
+
     private void Awake()
     {
         _collider = GetComponent<BoxCollider>();
@@ -30,46 +34,70 @@ public class Portal : MonoBehaviour
     {
         _outlineRenderer.material.SetColor("_OutlineColor", portalColor);
 
+        _portalablePortal = FindObjectOfType<PortalablePlayer>();
+
         gameObject.SetActive(false);
     }
 
     private void Update()
     {
         Renderer.enabled = otherPortal.isPlaced;
-        //for (int i = 0; i < _portalObjects.Count; ++i)
-        //{
-        //    Vector3 objPos = transform.InverseTransformPoint(_portalObjects[i].transform.position);
-        //
-        //    Debug.Log("Portal Object");
-        //    if (objPos.z > 0.0f)
-        //    {
-        //        _portalObjects[i].Warp();
-        //    }
-        //}
-    }
+        for (int i = 0; i < _portalObjects.Count; ++i)
+        {
+            Vector3 objPos = transform.InverseTransformPoint(_portalObjects[i].transform.position);
+
+            if (objPos.z > 0.0f)
+            {
+                _portalObjects[i].Warp();
+            }
+        }
+        if(_isPlayerPortal)
+        {
+            Vector3 objPos = transform.InverseTransformPoint(_portalablePortal.transform.position);
+            //Debug.Log(objPos);
+            if (objPos.z > 0.0f)
+            {
+                _portalablePortal.StartWarp();
+            }
+        }
+
+    }   
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log($"Enter {other.name}");
-        //var obj = other.GetComponentInChildren<PortalableObject>();
+        var obj = other.GetComponent<PortalableObject>();
+        if (obj != null && !obj.IsPlayer)
         //if (obj != null)
-        //{
-        //    _portalObjects.Add(obj);
-        //    obj.SetIsInPortal(this, otherPortal, _wallCollider);
-        //}
+        {
+            _portalObjects.Add(obj);
+            obj.SetIsInPortal(this, otherPortal, _wallCollider);
+        }
+        else if(obj != null && obj.IsPlayer)
+        {
+            _isPlayerPortal = true;
+            var player = other.GetComponentInChildren<PortalablePlayer>();
+            player.SetIsInPortal(this, otherPortal, _wallCollider);
+            player.StartPortal();
+        }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        Debug.Log($"Exit {other.name}");
-
-        //var obj = other.GetComponentInChildren<PortalableObject>();
-        //
-        //if (_portalObjects.Contains(obj))
-        //{
-        //    _portalObjects.Remove(obj);
-        //    obj.ExitPortal(_wallCollider);
-        //}
+        Debug.Log("Trigger Exit");
+        var obj = other.GetComponentInChildren<PortalableObject>();
+        
+        if (_portalObjects.Contains(obj))
+        {
+            _portalObjects.Remove(obj);
+            obj.ExitPortal(_wallCollider);
+        }
+        if(obj.IsPlayer)
+        {
+            _isPlayerPortal = false;
+            var player = other.GetComponentInChildren<PortalablePlayer>();
+            player.ExitPortal(_wallCollider);
+            player.StopPortal();
+        }
     }
 
 

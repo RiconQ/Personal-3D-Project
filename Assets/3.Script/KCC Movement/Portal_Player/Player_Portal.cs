@@ -10,7 +10,7 @@ public class Player_Portal : MonoBehaviour
     [SerializeField] private GrapplingSwing_Portal _graplingSwing;
 
     [Header("Portal Gun")]
-    [SerializeField] private PortalGun _portalGun;
+    [SerializeField] private PortalablePlayer _portalPlayer;
 
     [Header("Camera")]
     [SerializeField] private PlayerCamera_Portal _playerCamera;
@@ -33,6 +33,10 @@ public class Player_Portal : MonoBehaviour
         _playerCharacter.Initialize();
         _wallRunning.Initialize(_playerCharacter);
         _graplingSwing.Initialize(_playerCharacter);
+
+        //Portal
+        _portalPlayer.Initialize(_playerCharacter);
+
         //Camera
         _playerCamera.Initialize(_playerCharacter.GetCameraTarget());
 
