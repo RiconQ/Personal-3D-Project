@@ -31,13 +31,8 @@ public class CameraSpring : MonoBehaviour
 
         var localSpringPosition = _springPosition - transform.position;
         var springHeight = Vector3.Dot(localSpringPosition, up);
-        if (_pm.IsDashing())
-        {
-            transform.localEulerAngles = new Vector3(0f, 0f, 0f);
-            Debug.Log("asdas");
-        }
-        else
-            transform.localEulerAngles = new Vector3(-springHeight * _angularDisplacement, 0f, 0f);
+
+        transform.localEulerAngles = new Vector3(-springHeight * _angularDisplacement, 0f, 0f);
         transform.localPosition = localSpringPosition * _linearDisplacement;
     }
 

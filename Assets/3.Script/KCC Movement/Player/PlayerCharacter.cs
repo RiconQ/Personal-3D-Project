@@ -29,27 +29,17 @@ public struct CharacterInput
 {
     public Quaternion Rotation;
     public Vector2 Move;
-    public bool Dash;
     public bool Jump;
-    public bool JumpSustain;
     public ECrouchInput Crouch;
-    public bool GrapplingSwing;
-    public bool LeftPortal;
-    public bool RIghtPortal;
 }
 
 public struct RequestedInput
 {
     public Quaternion Rotation;
     public Vector3 Movement;
-    public bool Dash;
     public bool Jump;
-    public bool SustainJump;
     public bool Crouch;
     public bool CrouchInAir;
-    public bool GrapplingSwing;
-    public bool LeftPortal;
-    public bool RIghtPortal;
 }
 
 public class PlayerCharacter : MonoBehaviour, ICharacterController
@@ -62,16 +52,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private Transform _cameraTarget;
     [SerializeField] private PlayerCamera _playerCamera;
     [SerializeField] private Transform _cameraTransform;
-    [SerializeField] private Transform _gunTip;
-    public Transform GunTip => _gunTip;
-    [SerializeField] private LineRenderer _lr;
-
-    [Header("Movement Reference")]
-    [SerializeField] private WallRunning _wallRunning;
-    [SerializeField] private WallCilmb _wallClimb;
-    [SerializeField] private GrapplingSwing _grapplingSwing;
-    [SerializeField] private Dash _dash;
-    [SerializeField] private CrouchSlam _crouchSlam;
 
     [Space]
     [Header("Movement")]
@@ -86,7 +66,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     public float ExitWallTime => _exitWallTime;
 
     [Header("Jump")]
-    [SerializeField] private int _maxJumpCount = 2;
     [SerializeField] private float _jumpSpeed = 20f;
     [SerializeField] private float _coyoteTime = 0.2f;
     [Range(0f, 1f)]
@@ -128,7 +107,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private float _timeSinceUngrounded;
     private float _timeSinceJumpRequest;
     private bool _ungroundedDueToJump;
-    private int _remainJumpCount;
 
     [HideInInspector] public bool isExitingWall;
     [HideInInspector] public float exitWallTimer;
@@ -160,9 +138,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private void ResetVariables()
     {
         isExitingWall = false;
-        //_isSwinging = false;
-        //_lr.enabled = false;
-        _remainJumpCount = _maxJumpCount;
     }
 
     private void Update()
@@ -174,20 +149,13 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             $"Stance : {_currentState.Stance.ToString()}\n" +
             $"Grounded : {_currentState.Grounded}\n" +
             $"Velocity : {_motor.Velocity.magnitude}\n" +
-            $"Jump : {_remainJumpCount} / {_maxJumpCount}\n" +
-            $"FOV : {Camera.main.fieldOfView}\n" +
-            $"CS : {_crouchSlam.IsCrouchSlam}";
+            $"FOV : {Camera.main.fieldOfView}\n";
 
         debugText.text = $"{debugLog}";
     }
 
     private void LateUpdate()
     {
-        if (_grapplingSwing.IsGrappling || _grapplingSwing.IsSwing)
-        {
-            _lr.SetPosition(0, _gunTip.position);
-        }
-
         Debug.DrawRay(transform.position, _motor.Velocity.normalized * 2, Color.yellow);
     }
 
@@ -213,12 +181,11 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         #region Jump
         var wasRequestingJump = _requestedInput.Jump;
         _requestedInput.Jump = _requestedInput.Jump || input.Jump;
-        if ((_requestedInput.Jump && !wasRequestingJump) && _remainJumpCount > 0)
+        if (_requestedInput.Jump && !wasRequestingJump)
         {
             _timeSinceJumpRequest = 0f;
         }
 
-        _requestedInput.SustainJump = input.JumpSustain;
         #endregion
 
         #region Crouch
@@ -230,41 +197,16 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             _ => _requestedInput.Crouch
         };
 
-        if (_requestedInput.Crouch && !wasRequestingCrouch && !_wallRunning.IsWallRunning && !_grapplingSwing.IsSwing)
+        if (_requestedInput.Crouch && !wasRequestingCrouch)
         {
             _requestedInput.CrouchInAir = !_currentState.Grounded;
-            _crouchSlam.StartCrouchSlam();
         }
         else if (!_requestedInput.Crouch && wasRequestingCrouch)
         {
             _requestedInput.CrouchInAir = false;
-            _crouchSlam.StopCrouchSlam();
         }
         #endregion
 
-        #region Grappling Swing
-        _requestedInput.GrapplingSwing = input.GrapplingSwing;
-        if (_requestedInput.GrapplingSwing && !_motor.GroundingStatus.IsStableOnGround)
-        {
-            if (!_grapplingSwing.IsSwing && !_grapplingSwing.IsGrappling)
-                _grapplingSwing.StartGrapplingSwing();
-            else
-                _grapplingSwing.StopGrapplingSwing();
-        }
-        #endregion
-
-        #region Dash
-        _requestedInput.Dash = input.Dash;
-        if (_requestedInput.Dash)
-        {
-            if (_currentState.Stance != EStance.Slide &&
-                !_wallClimb.IsClimbing &&
-                !_wallRunning.IsWallRunning &&
-                !_grapplingSwing.IsSwing &&
-                !_grapplingSwing.IsGrappling)
-                _dash.StartDash();
-        }
-        #endregion Dash
     }
 
     public void UpdateBody(float deltaTime)
@@ -297,19 +239,9 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     {
         _currentState.Acceleration = Vector3.zero;
 
-        if (_dash.IsDashing)
-        {
-            _dash.DashMovement(ref currentVelocity);
-        }
-
         // If player on Ground
         if (_motor.GroundingStatus.IsStableOnGround)
         {
-            if (_wallClimb.IsClimbing)
-            {
-                //Debug.Log("Ground WallClimb");
-                _wallClimb.ClimbingMovement(ref currentVelocity);
-            }
             _timeSinceUngrounded = 0f;
             _ungroundedDueToJump = false;
 
@@ -431,116 +363,94 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         // character is in air
         else
         {
-            if (_wallRunning.IsWallRunning)
+
+            if (_motor.Velocity.magnitude > 50)
             {
-                _wallRunning.WallRunningMovement(ref currentVelocity);
-            }
-            else if (_wallClimb.IsClimbing)
-            {
-                //Debug.Log("Air WallClimb");
-                _wallClimb.ClimbingMovement(ref currentVelocity);
+                _playerCamera.DoFov(100f);
             }
             else
             {
-                if (_motor.Velocity.magnitude > 50)
-                {
-                    _playerCamera.DoFov(100f);
-                }
-                else
-                {
-                    _playerCamera.DoFov(80f);
-                }
-                _timeSinceUngrounded += deltaTime;
+                _playerCamera.DoFov(80f);
+            }
+            _timeSinceUngrounded += deltaTime;
 
-                // Air Move
-                if (_requestedInput.Movement.sqrMagnitude > 0f)
-                {
-                    // Requested movement projected onto movement plane (magnitude preserved)
-                    var planarMovement = Vector3.ProjectOnPlane
-                    (
-                        vector: _requestedInput.Movement,
-                        planeNormal: _motor.CharacterUp
-                    ) * _requestedInput.Movement.magnitude;
+            // Air Move
+            if (_requestedInput.Movement.sqrMagnitude > 0f)
+            {
+                // Requested movement projected onto movement plane (magnitude preserved)
+                var planarMovement = Vector3.ProjectOnPlane
+                (
+                    vector: _requestedInput.Movement,
+                    planeNormal: _motor.CharacterUp
+                ) * _requestedInput.Movement.magnitude;
 
-                    // current velocity on movement plane
-                    var currentPlanarVelocity = Vector3.ProjectOnPlane
+                // current velocity on movement plane
+                var currentPlanarVelocity = Vector3.ProjectOnPlane
+                (
+                    vector: currentVelocity,
+                    planeNormal: _motor.CharacterUp
+                );
+
+                //Calculate movement force;
+                // Will be changed depending on current velocity
+                var movementForce = planarMovement * _airAcceleration * deltaTime;
+
+                // if moving slower than the max air speed, treat movementForce as a simple steering force
+                if (currentPlanarVelocity.magnitude < _airSpeed)
+                {
+                    //Add it to the current planer velocity for a target velocity
+                    var targetPlanerVelocity = currentPlanarVelocity + movementForce;
+
+                    //Limit target velocity to air speed
+                    targetPlanerVelocity = Vector3.ClampMagnitude(targetPlanerVelocity, _airSpeed);
+
+                    //Steer toward current velocity
+                    movementForce = targetPlanerVelocity - currentPlanarVelocity;
+                }
+                //Otherwise, nerf the movementForce when it is in the direction of the current planer velocity
+                //to prevent accelerating further beyond the max air speed
+                else if (Vector3.Dot(currentPlanarVelocity, movementForce) > 0f)
+                {
+                    //Project movement force onto the plane whose normal is the current planar velocity
+                    var constrainedMovementForce = Vector3.ProjectOnPlane
                     (
-                        vector: currentVelocity,
-                        planeNormal: _motor.CharacterUp
+                        vector: movementForce,
+                        planeNormal: currentPlanarVelocity.normalized
                     );
+                    movementForce = constrainedMovementForce;
+                }
 
-                    //Calculate movement force;
-                    // Will be changed depending on current velocity
-                    var movementForce = planarMovement * _airAcceleration * deltaTime;
-
-                    // if moving slower than the max air speed, treat movementForce as a simple steering force
-                    if (currentPlanarVelocity.magnitude < _airSpeed)
+                //Prevent air-climbing steep slope
+                if (_motor.GroundingStatus.FoundAnyGround)
+                {
+                    //if moving in the same direction as the resultant velocity
+                    if (Vector3.Dot(movementForce, currentVelocity + movementForce) > 0f)
                     {
-                        //Add it to the current planer velocity for a target velocity
-                        var targetPlanerVelocity = currentPlanarVelocity + movementForce;
-
-                        //Limit target velocity to air speed
-                        targetPlanerVelocity = Vector3.ClampMagnitude(targetPlanerVelocity, _airSpeed);
-
-                        //Steer toward current velocity
-                        movementForce = targetPlanerVelocity - currentPlanarVelocity;
-                    }
-                    //Otherwise, nerf the movementForce when it is in the direction of the current planer velocity
-                    //to prevent accelerating further beyond the max air speed
-                    else if (Vector3.Dot(currentPlanarVelocity, movementForce) > 0f)
-                    {
-                        //Project movement force onto the plane whose normal is the current planar velocity
-                        var constrainedMovementForce = Vector3.ProjectOnPlane
+                        //Calculate Obstruction normal
+                        var obstructionNormal = Vector3.Cross
                         (
-                            vector: movementForce,
-                            planeNormal: currentPlanarVelocity.normalized
-                        );
-                        movementForce = constrainedMovementForce;
-                    }
-
-                    //Prevent air-climbing steep slope
-                    if (_motor.GroundingStatus.FoundAnyGround)
-                    {
-                        //if moving in the same direction as the resultant velocity
-                        if (Vector3.Dot(movementForce, currentVelocity + movementForce) > 0f)
-                        {
-                            //Calculate Obstruction normal
-                            var obstructionNormal = Vector3.Cross
+                            _motor.CharacterUp,
+                            Vector3.Cross
                             (
                                 _motor.CharacterUp,
-                                Vector3.Cross
-                                (
-                                    _motor.CharacterUp,
-                                    _motor.GroundingStatus.GroundNormal
-                                )
-                            ).normalized;
+                                _motor.GroundingStatus.GroundNormal
+                            )
+                        ).normalized;
 
-                            // project movement force onto obstruction plane
-                            movementForce = Vector3.ProjectOnPlane(movementForce, obstructionNormal);
-                        }
+                        // project movement force onto obstruction plane
+                        movementForce = Vector3.ProjectOnPlane(movementForce, obstructionNormal);
                     }
-
-                    currentVelocity += movementForce;
                 }
 
-                //Gravity
-                var effectiveGravity = _gravity;
-                var verticalSpeed = Vector3.Dot(currentVelocity, _motor.CharacterUp);
-                if (_requestedInput.SustainJump && verticalSpeed > 0f)
-                    effectiveGravity *= _jumpSustainGravity;
-
-                currentVelocity += _motor.CharacterUp * effectiveGravity * deltaTime;
-
-                if (_grapplingSwing.IsSwing)
-                {
-                    _grapplingSwing.SwingMovement(ref currentVelocity, deltaTime);
-                }
+                currentVelocity += movementForce;
             }
 
-            if(_crouchSlam.IsCrouchSlam)
-            {
-                _crouchSlam.CrouchSlamMovement(ref currentVelocity);
-            }
+            //Gravity
+            var effectiveGravity = _gravity;
+            var verticalSpeed = Vector3.Dot(currentVelocity, _motor.CharacterUp);
+
+            currentVelocity += _motor.CharacterUp * effectiveGravity * deltaTime;
+
         }
         //Jump
         if (_requestedInput.Jump)
@@ -548,37 +458,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             var grounded = _motor.GroundingStatus.IsStableOnGround;
             var canCoyoteJump = _timeSinceUngrounded < _coyoteTime && !_ungroundedDueToJump;
 
-            if (_grapplingSwing.IsSwing && !grounded)
+            if (grounded || canCoyoteJump)
             {
-                _remainJumpCount = 1;
-                _requestedInput.Jump = false;     //Unset jump request
-                _requestedInput.Crouch = false;   // and request the character uncrouch
-                _requestedInput.CrouchInAir = false;
-                _grapplingSwing.StopGrapplingSwing();
-                //_grapplingSwing.SwingJump(ref currentVelocity);
-            }
-
-            else if (_wallRunning.IsWallRunning)
-            {
-                _remainJumpCount--;
-                _requestedInput.Jump = false;     //Unset jump request
-                _requestedInput.Crouch = false;   // and request the character uncrouch
-                _requestedInput.CrouchInAir = false;
-                _wallRunning.WallJump(ref currentVelocity);
-            }
-
-            else if (_wallClimb.IsClimbing)
-            {
-                _remainJumpCount--;
-                _requestedInput.Jump = false;     //Unset jump request
-                _requestedInput.Crouch = false;   // and request the character uncrouch
-                _requestedInput.CrouchInAir = false;
-                _wallClimb.ClimbJump(ref currentVelocity);
-            }
-
-            else if (grounded || canCoyoteJump || _remainJumpCount > 0)
-            {
-                _remainJumpCount--;
                 _requestedInput.Jump = false;     //Unset jump request
                 _requestedInput.Crouch = false;   // and request the character uncrouch
                 _requestedInput.CrouchInAir = false;
@@ -690,57 +571,19 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         // update _lastState to store the Character state snapshot taken at
         // the beginning of this character update;
         _lastState = _tempState;
-
-        if(_grapplingSwing.IsSwing)
-        {
-            if (_crouchSlam.IsCrouchSlam)
-                _crouchSlam.StopCrouchSlam();
-        }
-        //{
-        //    if (_grapplingSwing.Check180Degree())
-        //        _grapplingSwing.StopGrapplingSwing();
-        //}
-
-
     }
 
 
     public void OnGroundHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
-        if (_grapplingSwing.IsSwing)
-        {
-            _grapplingSwing.StopGrapplingSwing();
-        }
         if (_currentState.Stance == EStance.Stand || _currentState.Stance == EStance.Crouch)
         {
             if (_motor.Velocity.magnitude < 40f)
                 _playerCamera.DoFov(80f);
         }
-
-        if (_crouchSlam.IsCrouchSlam)
-        {
-            _crouchSlam.StopCrouchSlam();
-        }
     }
     public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
-        if (hitStabilityReport.IsStable)
-        { ResetJumpCount(); }
-
-        if (_grapplingSwing.IsSwing)
-        {
-            _grapplingSwing.StopGrapplingSwing();
-        }
-
-        if (_dash.IsDashing)
-        {
-            _dash.CheckWall();
-        }
-
-        //if (_crouchSlam.IsCrouchSlam)
-        //{
-        //    _crouchSlam.StopCrouchSlam();
-        //}
     }
     public bool IsColliderValidForCollisions(Collider coll)
     {
@@ -769,25 +612,5 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         {
             _motor.BaseVelocity = Vector3.zero;
         }
-    }
-
-    public void ResetJumpCount()
-    {
-        _remainJumpCount = _maxJumpCount;
-    }
-
-    /// <summary>
-    /// Check Is Player is not StableGround
-    /// </summary>
-    /// <returns></returns>
-    public bool AboveGound()
-    {
-        return !_motor.GroundingStatus.IsStableOnGround;
-    }
-
-    public bool IsDashing()
-    {
-
-        return _dash.IsDashing;
     }
 }

@@ -7,11 +7,6 @@ public class Player : MonoBehaviour
 {
     [Header("Player Movement")]
     [SerializeField] private PlayerCharacter _playerCharacter;
-    [SerializeField] private WallRunning _wallRunning;
-    [SerializeField] private WallCilmb _wallClimb;
-    [SerializeField] private GrapplingSwing _graplingSwing;
-    [SerializeField] private Dash _dash;
-    [SerializeField] private CrouchSlam _crouchSlam;
  
     [Header("Camera")]
     [SerializeField] private PlayerCamera _playerCamera;
@@ -38,11 +33,6 @@ public class Player : MonoBehaviour
 
         //Character Movement
         _playerCharacter.Initialize();
-        _wallRunning.Initialize(_playerCharacter);
-        _wallClimb.Initialize(_playerCharacter);
-        _graplingSwing.Initialize(_playerCharacter);
-        _dash.Initialize(_playerCharacter);
-        _crouchSlam.Initialize(_playerCharacter);
         //Camera
         _playerCamera.Initialize(_playerCharacter.GetCameraTarget());
 
@@ -74,12 +64,9 @@ public class Player : MonoBehaviour
         {
             Rotation    = _playerCamera.transform.rotation,
             Move        = input.Move.ReadValue<Vector2>(),
-            Dash        = input.Dash.WasPressedThisFrame(),
             Jump        = input.Jump.WasPressedThisFrame(),
-            JumpSustain = input.Jump.IsPressed(),
             Crouch      = input.Crouch.WasPressedThisFrame() ?
-                            ECrouchInput.Toggle : ECrouchInput.None,
-            GrapplingSwing = input.GrapplingSwing.WasPressedThisFrame()
+                            ECrouchInput.Toggle : ECrouchInput.None
         };
 
         _playerCharacter.UpdateInput(characterInput, _inputAction.Player.Move.ReadValue<Vector2>());
@@ -96,10 +83,6 @@ public class Player : MonoBehaviour
             }
         }
         #endif
-
-        _wallRunning.UpdateWallRun(deltaTime);
-        _wallClimb.UpdateWallClimb(deltaTime);
-        _dash.UpdateDash(deltaTime);
     }
 
     private void LateUpdate()
