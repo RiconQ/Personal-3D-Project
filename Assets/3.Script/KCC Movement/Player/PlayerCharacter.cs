@@ -31,6 +31,7 @@ public struct CharacterInput
     public Vector2 Move;
     public bool Jump;
     public ECrouchInput Crouch;
+    public bool RightMouse;
 }
 
 public struct RequestedInput
@@ -40,6 +41,13 @@ public struct RequestedInput
     public bool Jump;
     public bool Crouch;
     public bool CrouchInAir;
+    public bool RightMouse;
+}
+
+public class PlayerState
+{
+    public bool isExitingWall = false;
+    public bool isLedgeClimbing = false;
 }
 
 public class PlayerCharacter : MonoBehaviour, ICharacterController
@@ -53,31 +61,23 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private PlayerCamera _playerCamera;
     [SerializeField] private Transform _cameraTransform;
 
+    // Movement Reference
+    private Jump _jump;
+    private Sliding _sliding;
+    private LedgeClimb _ledgeClimb;
+    private Grappling _grappling;
+
     [Space]
     [Header("Movement")]
+    [SerializeField] private float _gravity = -90f;
     [SerializeField] private float _walkSpeed = 20f;
     [SerializeField] private float _crouchSpeed = 7f;
 
     [Space]
     [SerializeField] private float _walkResponse = 25f;
     [SerializeField] private float _crouchResponse = 20f;
-
     [SerializeField] private float _exitWallTime = 0.2f;
     public float ExitWallTime => _exitWallTime;
-
-    [Header("Jump")]
-    [SerializeField] private float _jumpSpeed = 20f;
-    [SerializeField] private float _coyoteTime = 0.2f;
-    [Range(0f, 1f)]
-    [SerializeField] private float _jumpSustainGravity = 0.4f;
-    [SerializeField] private float _gravity = -90f;
-
-    [Header("Sliding")]
-    [SerializeField] private float _slideStartSpeed = 25f;
-    [SerializeField] private float _slideEndSpeed = 15;
-    [SerializeField] private float _slideFriction = 0.8f;
-    [SerializeField] private float _slideSteerAcceleration = 5f;
-    [SerializeField] private float _slideGravity = -90f;
 
     [Header("Air Control")]
     [SerializeField] private float _airSpeed = 15f;
@@ -93,25 +93,17 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [Range(0f, 1f)]
     [SerializeField] private float _crouchCameraTargetHeight = 0.7f;
 
-    private CharacterState _currentState;
-    public CharacterState CurrentState => _currentState;
-    private CharacterState _lastState;
+    public CharacterState currentState;
+    public CharacterState lastState;
     private CharacterState _tempState;
 
     // Input
-    private RequestedInput _requestedInput;
+    public RequestedInput requestedInput;
     private Vector2 _moveInput;
     public Vector2 MoveInput => _moveInput;
 
     #region Code Variables
-    private float _timeSinceUngrounded;
-    private float _timeSinceJumpRequest;
-    private bool _ungroundedDueToJump;
-
-    [HideInInspector] public bool isExitingWall;
     [HideInInspector] public float exitWallTimer;
-
-    private bool _mustStopVelocity = false;
 
     private Collider[] _uncrouchOverlapResults;
 
@@ -126,18 +118,21 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     public void Initialize()
     {
-        _currentState.Stance = EStance.Stand;
-        _lastState = _currentState;
+        currentState.Stance = EStance.Stand;
+        lastState = currentState;
         _uncrouchOverlapResults = new Collider[8];
 
         _motor.CharacterController = this;
 
-        ResetVariables();
+        GetMovementReference();
     }
 
-    private void ResetVariables()
+    private void GetMovementReference()
     {
-        isExitingWall = false;
+        _jump = GetComponent<Jump>();
+        _sliding = GetComponent<Sliding>();
+        _ledgeClimb = GetComponent<LedgeClimb>();
+        _grappling = GetComponent<Grappling>();
     }
 
     private void Update()
@@ -146,8 +141,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             debugText.gameObject.SetActive(!debugText.gameObject.activeSelf);
         //Debug
         string debugLog =
-            $"Stance : {_currentState.Stance.ToString()}\n" +
-            $"Grounded : {_currentState.Grounded}\n" +
+            $"Stance : {currentState.Stance.ToString()}\n" +
+            $"Grounded : {currentState.Grounded}\n" +
             $"Velocity : {_motor.Velocity.magnitude}\n" +
             $"FOV : {Camera.main.fieldOfView}\n";
 
@@ -166,47 +161,59 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         #endregion
 
         #region Mouse
-        _requestedInput.Rotation = input.Rotation;
+        requestedInput.Rotation = input.Rotation;
         #endregion
 
         #region Movement
         // Take Vector2 Input -> Create 3D Movement Vector on XZ Plane
-        _requestedInput.Movement = new Vector3(input.Move.x, 0f, input.Move.y);
+        requestedInput.Movement = new Vector3(input.Move.x, 0f, input.Move.y);
         // Clamp to 1 length
-        _requestedInput.Movement = Vector3.ClampMagnitude(_requestedInput.Movement, 1f);
+        requestedInput.Movement = Vector3.ClampMagnitude(requestedInput.Movement, 1f);
         // Orient the input so it's relative to the direction the player is facing
-        _requestedInput.Movement = input.Rotation * _requestedInput.Movement;
+        requestedInput.Movement = input.Rotation * requestedInput.Movement;
         #endregion
 
         #region Jump
-        var wasRequestingJump = _requestedInput.Jump;
-        _requestedInput.Jump = _requestedInput.Jump || input.Jump;
-        if (_requestedInput.Jump && !wasRequestingJump)
+        var wasRequestingJump = requestedInput.Jump;
+        requestedInput.Jump = requestedInput.Jump || input.Jump;
+        if (requestedInput.Jump && !wasRequestingJump)
         {
-            _timeSinceJumpRequest = 0f;
+            _jump.timeSinceJumpRequest = 0f;
         }
 
         #endregion
 
         #region Crouch
-        var wasRequestingCrouch = _requestedInput.Crouch;
-        _requestedInput.Crouch = input.Crouch switch
+        var wasRequestingCrouch = requestedInput.Crouch;
+        requestedInput.Crouch = input.Crouch switch
         {
-            ECrouchInput.Toggle => !_requestedInput.Crouch,
-            ECrouchInput.None => _requestedInput.Crouch,
-            _ => _requestedInput.Crouch
+            ECrouchInput.Toggle => !requestedInput.Crouch,
+            ECrouchInput.None => requestedInput.Crouch,
+            _ => requestedInput.Crouch
         };
 
-        if (_requestedInput.Crouch && !wasRequestingCrouch)
+        if (requestedInput.Crouch && !wasRequestingCrouch)
         {
-            _requestedInput.CrouchInAir = !_currentState.Grounded;
+            requestedInput.CrouchInAir = !currentState.Grounded;
         }
-        else if (!_requestedInput.Crouch && wasRequestingCrouch)
+        else if (!requestedInput.Crouch && wasRequestingCrouch)
         {
-            _requestedInput.CrouchInAir = false;
+            requestedInput.CrouchInAir = false;
         }
         #endregion
 
+        #region RightMouse
+        requestedInput.RightMouse = input.RightMouse;
+        if (requestedInput.RightMouse && !_grappling.IsGrappline)
+        {
+            _grappling.ShootGrapple();
+        }
+        else if(requestedInput.RightMouse && _grappling.HasGrapplePoint)
+        {
+            //Jump to GrapplePoint
+            _grappling.StopGrappling();
+        }
+        #endregion
     }
 
     public void UpdateBody(float deltaTime)
@@ -216,7 +223,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
         var cameraTargetHeight = currentHeight *
         (
-            _currentState.Stance is EStance.Stand ? _standCameraTargetHeight : _crouchCameraTargetHeight
+            currentState.Stance is EStance.Stand ? _standCameraTargetHeight : _crouchCameraTargetHeight
         );
 
         var rootTargetScale = new Vector3(1f, normalizedHeight, 1f);
@@ -237,72 +244,37 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
-        _currentState.Acceleration = Vector3.zero;
+        currentState.Acceleration = Vector3.zero;
+
+        if (_ledgeClimb.IsLedgeClimbing == true)
+        {
+            return;
+        }
 
         // If player on Ground
         if (_motor.GroundingStatus.IsStableOnGround)
         {
-            _timeSinceUngrounded = 0f;
-            _ungroundedDueToJump = false;
+            _jump.timeSinceUngrounded = 0f;
+            _jump.ungroundedDueToJump = false;
 
             //snap the request movement direction to the angle of surface
             // -> character is walking on Ground
             var groundedMovement = _motor.GetDirectionTangentToSurface
             (
-                direction: _requestedInput.Movement,
+                direction: requestedInput.Movement,
                 surfaceNormal: _motor.GroundingStatus.GroundNormal
-            ) * _requestedInput.Movement.magnitude;
+            ) * requestedInput.Movement.magnitude;
 
             // Start Sliding
-            {
-                var moving = groundedMovement.sqrMagnitude > 0f;
-                var crouching = _currentState.Stance is EStance.Crouch;
-                var wasStanding = _lastState.Stance is EStance.Stand;
-                var wasInAir = !_lastState.Grounded;
-                if (moving && crouching && (wasStanding || wasInAir))
-                {
-                    _currentState.Stance = EStance.Slide;
-
-                    /*
-                     * When landing on stable ground the Character motor projects the velocity onto a flat ground plane
-                     * See : KinematicCharacterMotor.HandleVelocityProjection()
-                     * This is normally good, because under normal circumstances the player shouldn't slide when landing on the ground;
-                     * In this case, we want the player to slide
-                     * Reproject the last frame (falling) velocity onto the ground normal to slide
-                     */
-                    if (wasInAir)
-                    {
-                        currentVelocity = Vector3.ProjectOnPlane
-                        (
-                            vector: _lastState.Velocity,
-                            planeNormal: _motor.GroundingStatus.GroundNormal
-                        );
-                        //currentVelocity = _lastState.Velocity;
-                    }
-
-                    var effectiveSlideStartSpeed = _slideStartSpeed;
-                    if (!_lastState.Grounded && !_requestedInput.CrouchInAir)
-                    {
-                        effectiveSlideStartSpeed = 0f;
-                        _requestedInput.CrouchInAir = false;
-                    }
-
-                    var slideSpeed = Mathf.Max(effectiveSlideStartSpeed, currentVelocity.magnitude);
-                    currentVelocity = _motor.GetDirectionTangentToSurface
-                    (
-                        direction: currentVelocity,
-                        surfaceNormal: _motor.GroundingStatus.GroundNormal
-                    ) * slideSpeed;
-                }
-            }
+            _sliding.StartSliding(ref currentVelocity, groundedMovement);
 
             // Move
-            if (_currentState.Stance is EStance.Stand || _currentState.Stance is EStance.Crouch)
+            if (currentState.Stance is EStance.Stand || currentState.Stance is EStance.Crouch)
             {
                 // Calculate the speed and responsiveness of movement based
                 //on the character's stance
-                var speed = _currentState.Stance is EStance.Stand ? _walkSpeed : _crouchSpeed;
-                var response = _currentState.Stance is EStance.Stand ? _walkResponse : _crouchResponse;
+                var speed = currentState.Stance is EStance.Stand ? _walkSpeed : _crouchSpeed;
+                var response = currentState.Stance is EStance.Stand ? _walkResponse : _crouchResponse;
 
                 // Smooth move along the ground in that direction
                 var targetVelocity = groundedMovement * speed;
@@ -312,58 +284,20 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                     b: targetVelocity,
                     t: 1f - Mathf.Exp(-response * deltaTime)
                 );
-                _currentState.Acceleration = moveVelocity - currentVelocity;
+                currentState.Acceleration = moveVelocity - currentVelocity;
 
                 currentVelocity = moveVelocity;
             }
             // Continue sliding
             else
             {
-
                 _playerCamera.DoFov(100f);
-
-                //Friction
-                currentVelocity -= currentVelocity * (_slideFriction * deltaTime);
-
-                // Slope
-                {
-                    var force = Vector3.ProjectOnPlane
-                    (
-                        vector: -_motor.CharacterUp,
-                        planeNormal: _motor.GroundingStatus.GroundNormal
-                    ) * _slideGravity;
-                    // In video 
-                    //currentVelocity -= force * deltaTime;
-                    // IDK why this not working
-                    currentVelocity += force * deltaTime;
-                }
-
-                // Steer 
-                {
-                    //Target velocity is the player's movement direction at the current speed
-                    var currentSpeed = currentVelocity.magnitude;
-                    var targetVelocity = groundedMovement * currentSpeed;
-                    var steerVelocity = currentVelocity;
-                    var steerForce = (targetVelocity - steerVelocity) * _slideSteerAcceleration * deltaTime;
-
-                    //Add steer force, but clamp velocity so the slide speed doesnt increase due to direct movement input
-                    steerVelocity += steerForce;
-                    steerVelocity = Vector3.ClampMagnitude(steerVelocity, currentSpeed);
-
-                    _currentState.Acceleration = (steerVelocity - currentVelocity) / deltaTime;
-
-                    currentVelocity = steerVelocity;
-                }
-
-                //Stop
-                if (currentVelocity.magnitude < _slideEndSpeed)
-                    _currentState.Stance = EStance.Crouch;
+                _sliding.ContinueSliding(ref currentVelocity, deltaTime, groundedMovement);
             }
         }
         // character is in air
         else
         {
-
             if (_motor.Velocity.magnitude > 50)
             {
                 _playerCamera.DoFov(100f);
@@ -372,17 +306,17 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             {
                 _playerCamera.DoFov(80f);
             }
-            _timeSinceUngrounded += deltaTime;
+            _jump.timeSinceUngrounded += deltaTime;
 
             // Air Move
-            if (_requestedInput.Movement.sqrMagnitude > 0f)
+            if (requestedInput.Movement.sqrMagnitude > 0f)
             {
                 // Requested movement projected onto movement plane (magnitude preserved)
                 var planarMovement = Vector3.ProjectOnPlane
                 (
-                    vector: _requestedInput.Movement,
+                    vector: requestedInput.Movement,
                     planeNormal: _motor.CharacterUp
-                ) * _requestedInput.Movement.magnitude;
+                ) * requestedInput.Movement.magnitude;
 
                 // current velocity on movement plane
                 var currentPlanarVelocity = Vector3.ProjectOnPlane
@@ -453,35 +387,45 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
         }
         //Jump
-        if (_requestedInput.Jump)
+        if (requestedInput.Jump)
         {
             var grounded = _motor.GroundingStatus.IsStableOnGround;
-            var canCoyoteJump = _timeSinceUngrounded < _coyoteTime && !_ungroundedDueToJump;
+            var canCoyoteJump = _jump.timeSinceUngrounded < _jump.CoyoteTime && !_jump.ungroundedDueToJump;
 
-            if (grounded || canCoyoteJump)
+            if (grounded || canCoyoteJump || currentState.Stance == EStance.Slide)
             {
-                _requestedInput.Jump = false;     //Unset jump request
-                _requestedInput.Crouch = false;   // and request the character uncrouch
-                _requestedInput.CrouchInAir = false;
+                requestedInput.Jump = false;     //Unset jump request
+                requestedInput.Crouch = false;   // and request the character uncrouch
+                requestedInput.CrouchInAir = false;
 
                 // Unstick Player from the ground
                 _motor.ForceUnground(time: 0f);
-                _ungroundedDueToJump = true;
+                _jump.ungroundedDueToJump = true;
 
-                // Set Minimum Vertical Speed to the Jump Speed
-                var currentVerticalSpeed = Vector3.Dot(currentVelocity, _motor.CharacterUp);
-                var targetVerticalSpeed = Mathf.Max(currentVerticalSpeed, _jumpSpeed);
+                if (currentState.Stance == EStance.Slide)
+                {
+                    _sliding.SlidingJump(ref currentVelocity);
+                }
+                else
+                {
+                    _jump.JumpMovement(ref currentVelocity);
+                }
+            }
+            else if (!grounded && _ledgeClimb.IsInLedge && !_ledgeClimb.IsLedgeClimbing)
+            {
+                requestedInput.Jump = false;     //Unset jump request
+                requestedInput.Crouch = false;   // and request the character uncrouch
+                requestedInput.CrouchInAir = false;
 
-                // Add the difference in current and target vertical speed to the character's velocity
-                currentVelocity += _motor.CharacterUp * (targetVerticalSpeed - currentVerticalSpeed);
+                _ledgeClimb.StartLedgeClimb();
             }
             else
             {
-                _timeSinceJumpRequest += deltaTime;
+                _jump.timeSinceJumpRequest += deltaTime;
 
                 //Defer the jump request until coyote time has passed
-                var canJumpLater = _timeSinceJumpRequest < _coyoteTime;
-                _requestedInput.Jump = canJumpLater;
+                var canJumpLater = _jump.timeSinceJumpRequest < _jump.CoyoteTime;
+                requestedInput.Jump = canJumpLater;
             }
         }
     }
@@ -500,7 +444,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
         var forward = Vector3.ProjectOnPlane
         (
-            _requestedInput.Rotation * Vector3.forward, _motor.CharacterUp
+            requestedInput.Rotation * Vector3.forward, _motor.CharacterUp
         );
 
         if (forward != Vector3.zero)
@@ -510,12 +454,12 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     public void BeforeCharacterUpdate(float deltaTime)
     {
-        _tempState = _currentState;
+        _tempState = currentState;
 
         // Crocuh
-        if (_requestedInput.Crouch && _currentState.Stance is EStance.Stand)
+        if (requestedInput.Crouch && currentState.Stance is EStance.Stand)
         {
-            _currentState.Stance = EStance.Crouch;
+            currentState.Stance = EStance.Crouch;
             _motor.SetCapsuleDimensions
             (
                 radius: _motor.Capsule.radius,
@@ -526,13 +470,13 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     }
     public void PostGroundingUpdate(float deltaTime)
     {
-        if (!_motor.GroundingStatus.IsStableOnGround && _currentState.Stance is EStance.Slide)
-            _currentState.Stance = EStance.Crouch;
+        if (!_motor.GroundingStatus.IsStableOnGround && currentState.Stance is EStance.Slide)
+            currentState.Stance = EStance.Crouch;
     }
     public void AfterCharacterUpdate(float deltaTime)
     {
         // Uncrouch
-        if (!_requestedInput.Crouch && _currentState.Stance != EStance.Stand)
+        if (!requestedInput.Crouch && currentState.Stance != EStance.Stand)
         {
             // Tentatively stand up the character capsule
             _motor.SetCapsuleDimensions
@@ -551,7 +495,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             if (_motor.CharacterOverlap(pos, rot, _uncrouchOverlapResults, mask, QueryTriggerInteraction.Ignore) > 0)
             {
                 // Crouch again
-                _requestedInput.Crouch = true;
+                requestedInput.Crouch = true;
                 _motor.SetCapsuleDimensions
                 (
                     radius: _motor.Capsule.radius,
@@ -561,22 +505,22 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             }
             else
             {
-                _currentState.Stance = EStance.Stand;
+                currentState.Stance = EStance.Stand;
             }
         }
 
         //Update state to reflect relevant motor properties
-        _currentState.Grounded = _motor.GroundingStatus.IsStableOnGround;
-        _currentState.Velocity = _motor.Velocity;
+        currentState.Grounded = _motor.GroundingStatus.IsStableOnGround;
+        currentState.Velocity = _motor.Velocity;
         // update _lastState to store the Character state snapshot taken at
         // the beginning of this character update;
-        _lastState = _tempState;
+        lastState = _tempState;
     }
 
 
     public void OnGroundHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
-        if (_currentState.Stance == EStance.Stand || _currentState.Stance == EStance.Crouch)
+        if (currentState.Stance == EStance.Stand || currentState.Stance == EStance.Crouch)
         {
             if (_motor.Velocity.magnitude < 40f)
                 _playerCamera.DoFov(80f);
@@ -584,6 +528,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     }
     public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
+
     }
     public bool IsColliderValidForCollisions(Collider coll)
     {
@@ -602,8 +547,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         return _cameraTarget;
     }
 
-    public CharacterState GetState() => _currentState;
-    public CharacterState GetLastState() => _lastState;
+    public CharacterState GetState() => currentState;
+    public CharacterState GetLastState() => lastState;
 
     public void SetPosition(Vector3 position, bool killVelocity = true)
     {

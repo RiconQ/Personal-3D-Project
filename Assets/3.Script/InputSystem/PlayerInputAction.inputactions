@@ -42,36 +42,9 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Dash",
-                    "type": "Button",
-                    "id": "0fc35967-7e4e-4b56-b1b4-5ca5d92ef1be",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "GrapplingSwing",
+                    "name": "RightMouse",
                     "type": "Button",
                     "id": "ae0e0a1a-294d-473c-9aac-0f3f398b4ee5",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "LeftPortal",
-                    "type": "Button",
-                    "id": "ead28246-7e13-46f6-a7eb-72cee080a6fe",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "RightPortal",
-                    "type": "Button",
-                    "id": "f47b9d8a-3f6f-40e3-a7ff-295280f719c7",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -180,45 +153,12 @@
                 },
                 {
                     "name": "",
-                    "id": "741ab555-105a-4910-88de-9affe5ca322e",
-                    "path": "<Keyboard>/leftShift",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Dash",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "1687c1ce-0fdc-476b-9bd2-41cb9b46f62f",
-                    "path": "<Keyboard>/q",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "GrapplingSwing",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "29486ec9-0b50-4655-a89b-4f4df88fa670",
-                    "path": "<Mouse>/leftButton",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "LeftPortal",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "be245731-0635-4d4f-86e7-062776b271bb",
                     "path": "<Mouse>/rightButton",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "RightPortal",
+                    "action": "RightMouse",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
