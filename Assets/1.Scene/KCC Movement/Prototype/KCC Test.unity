@@ -5227,7 +5227,7 @@ MonoBehaviour:
   _gunTip: {fileID: 852392762564651116}
   _cameraTransform: {fileID: 6987672578957703687}
   _maxGrappleDistance: 50
-  _detectionRadius: 4
+  _detectionRadius: 2
   _whatIsGrappable:
     serializedVersion: 2
     m_Bits: 256
