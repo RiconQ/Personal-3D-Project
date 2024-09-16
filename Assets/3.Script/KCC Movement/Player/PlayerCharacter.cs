@@ -70,6 +70,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [Space]
     [Header("Movement")]
     [SerializeField] private float _gravity = -90f;
+    public float Gravity => _gravity;
     [SerializeField] private float _walkSpeed = 20f;
     [SerializeField] private float _crouchSpeed = 7f;
 
@@ -248,6 +249,12 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
         if (_ledgeClimb.IsLedgeClimbing == true)
         {
+            return;
+        }
+
+        if(_grappling.IsGrappleExecuting == true)
+        {
+            _grappling.JumpToPosition(ref currentVelocity);
             return;
         }
 
@@ -528,7 +535,10 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     }
     public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
-
+        if(_grappling.IsGrappline)
+        {
+            //If Hit Enemy -> Enemy Jump
+        }
     }
     public bool IsColliderValidForCollisions(Collider coll)
     {

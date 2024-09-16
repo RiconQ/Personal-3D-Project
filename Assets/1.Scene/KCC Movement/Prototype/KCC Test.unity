@@ -5226,11 +5226,14 @@ MonoBehaviour:
   _lr: {fileID: 5847320598551334840}
   _gunTip: {fileID: 852392762564651116}
   _cameraTransform: {fileID: 6987672578957703687}
+  _grappleGravity: -90
   _maxGrappleDistance: 50
   _detectionRadius: 2
   _whatIsGrappable:
     serializedVersion: 2
     m_Bits: 256
+  _grappleDelayTime: 0.2
+  _overshootYAxis: 2
 --- !u!4 &5604354709192640585
 Transform:
   m_ObjectHideFlags: 0
