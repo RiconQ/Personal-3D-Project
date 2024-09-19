@@ -1,0 +1,26 @@
+fileFormatVersion: 2
+guid: 56db14f3394e6eb4f9919a9d70671389
+timeCreated: 1726772783
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  externalObjects: {}
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Magra
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 76aa506feced61e44af0a98d1f84f66f, type: 3}
+  customCharacters:
+  fontRenderingMode: 0
+  output:
+    hasEmptyFontData: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData:
+  assetBundleName:
+  assetBundleVariant:

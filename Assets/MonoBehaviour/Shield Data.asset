@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4c9c4808d7a4ebfad56f9a8f0ea30b5, type: 3}
+  m_Name: Shield Data
+  m_EditorClassIdentifier:
+  prefabPickable: {fileID: 1942649109594619, guid: 80d17f5eeb71c284a8c28078ece2de88, type: 2}
+  prefabThrowed: {fileID: 1130546814869586, guid: 279bab866b4080f4a9ee96561aa5e272, type: 2}
+  mesh: {fileID: 4300000, guid: d0f184d3ebc0478498588cc7c42ddf0f, type: 2}
+  index: 3

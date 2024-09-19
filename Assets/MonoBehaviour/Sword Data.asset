@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4c9c4808d7a4ebfad56f9a8f0ea30b5, type: 3}
+  m_Name: Sword Data
+  m_EditorClassIdentifier:
+  prefabPickable: {fileID: 1018811071308228, guid: 3eae2976e8789f749bf52c811ac33ad7, type: 2}
+  prefabThrowed: {fileID: 1994467047328247, guid: 4e88e53107a60cc48beb4ece80d6c5dd, type: 2}
+  mesh: {fileID: 4300000, guid: 7fb79cb72d0503e4fa65a1635db83e76, type: 2}
+  index: 0

@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6f165baf3f5081d5b168c4441706311, type: 3}
+  m_Name: Dirt
+  m_EditorClassIdentifier:
+  relatedTag: Dirt
+  sounds:
+  - {fileID: 8300000, guid: f26ac86c24224e74693892fc62a86b05, type: 3}
+  - {fileID: 8300000, guid: 624b2fe38a2ceca4a92420541d175114, type: 3}
+  - {fileID: 8300000, guid: be363a4d50568d945854df4f7bd27505, type: 3}
+  landing: {fileID: 8300000, guid: 4d1a14fd5bf074e48a1d5fa9fe200973, type: 3}
