@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.XR;
 
 public class Grappling : MonoBehaviour
 {
@@ -7,7 +8,8 @@ public class Grappling : MonoBehaviour
     [Header("Reference")]
     [SerializeField] private LineRenderer _lr;
     [SerializeField] private Transform _gunTip;
-    [SerializeField] private Transform _cameraTransform;
+    [SerializeField] private Transform _camera;
+    [SerializeField] private LayerMask _whatIsPlayer;
 
     [Header("Grappling")]
     [SerializeField] private float _grappleGravity = -90f;
@@ -15,11 +17,15 @@ public class Grappling : MonoBehaviour
     [SerializeField] private float _detectionRadius = 4f;
     [SerializeField] private LayerMask _whatIsGrappable;
     [SerializeField] private float _grappleDelayTime = 0.2f;
-    [SerializeField] private float _overshootYAxis = 2f;
+    [SerializeField] private float _overshootYAxis = 1.5f;
 
-    
+    [Header("ObjectGrapple")]
+    [SerializeField] private LayerMask _whatIsThrowable;
+    private GameObject _currentGrabedObject;
+    public GameObject CurrentGrabedObject => _currentGrabedObject;
+
     private bool _isGrappling = false;
-    public bool IsGrappline => _isGrappling;
+    public bool IsGrappling => _isGrappling;
 
     private bool _isGrappleExecuting = false;
     public bool IsGrappleExecuting => _isGrappleExecuting;
@@ -29,7 +35,7 @@ public class Grappling : MonoBehaviour
 
     private Vector3 _grapplePoint;
     private float _highestPointOnArc;
-    
+
 
     public void Initialize()
     {
@@ -44,20 +50,26 @@ public class Grappling : MonoBehaviour
     public void LateUpdateGrapple()
     {
         //Update lineRenderer
-        if( _isGrappling )
+        if (_isGrappling)
         {
             _lr.SetPosition(0, _gunTip.position);
+        }
+        if(_currentGrabedObject != null)
+        {
+            _lr.SetPosition(1, _currentGrabedObject.transform.position);
         }
     }
 
     public void ShootGrapple()
     {
+        _currentGrabedObject = null;
+
         _isGrappling = true;
         RaycastHit hit;
         if (Physics.SphereCast(
-            _cameraTransform.position,
+            _camera.position,
             _detectionRadius,
-            _cameraTransform.forward,
+            _camera.forward,
             out hit,
             _maxGrappleDistance,
             _whatIsGrappable))
@@ -66,16 +78,34 @@ public class Grappling : MonoBehaviour
             Debug.Log("Grapple Point Found");
             _grapplePoint = hit.transform.position;
             _hasGrapplePoint = true;
-
-            Invoke(nameof(ExecuteGrapple), _grappleDelayTime);
+        }
+        else if (Physics.SphereCast(
+            _camera.position,
+            _detectionRadius,
+            _camera.forward,
+            out hit,
+            _maxGrappleDistance,
+            _whatIsThrowable))
+        {
+            _grapplePoint = hit.transform.position;
+            _currentGrabedObject = hit.transform.gameObject;
+            GrabObject();
+            //Invoke(nameof(GrabObject), 0.1f);
         }
         else
         {
             //Grapple Point Not Found
             Debug.Log("Grapple Point Not Found");
             _hasGrapplePoint = false;
-            _grapplePoint = _cameraTransform.position + _cameraTransform.forward * _maxGrappleDistance;
-            Invoke(nameof(StopGrappling), 1f);
+            if (Physics.Raycast(_camera.position, _camera.forward, out hit, _maxGrappleDistance, ~_whatIsPlayer))
+            {
+                _grapplePoint = hit.point;
+            }
+            else
+            {
+                _grapplePoint = _camera.position + _camera.forward * _maxGrappleDistance;
+            }
+            Invoke(nameof(StopGrappling), 0.1f);
         }
 
         _lr.enabled = true;
@@ -99,7 +129,7 @@ public class Grappling : MonoBehaviour
 
     public void JumpToPosition(ref Vector3 currentVelocity)
     {
-        if(_pm.Motor.GroundingStatus.IsStableOnGround)
+        if (_pm.Motor.GroundingStatus.IsStableOnGround)
         {
             _pm.Motor.ForceUnground(time: 0f);
         }
@@ -108,7 +138,7 @@ public class Grappling : MonoBehaviour
     }
     private Vector3 velocityToSet;
 
-    private void ExecuteGrapple()
+    public void ExecuteGrapple()
     {
         Vector3 lowestPoint = new Vector3(transform.position.x, transform.position.y - 1f, transform.position.z);
 
@@ -133,5 +163,33 @@ public class Grappling : MonoBehaviour
         _isGrappleExecuting = false;
         _isGrappling = false;
         _hasGrapplePoint = false;
+        _currentGrabedObject = null;
+    }
+
+    private void GrabObject()
+    {
+        Rigidbody rb = _currentGrabedObject.GetComponent<Rigidbody>();
+
+        rb.velocity = Vector3.zero;
+        rb.AddForce(transform.up * 5f, ForceMode.Impulse);
+    }
+
+    public void PullObject()
+    {
+        //GameObject obj = _currentGrabedObject;
+        //Vector3 lowestPoint = obj.transform.position;
+        //
+        //float playerPositionRelativeYPos = transform.position.y - lowestPoint.y;
+        //float objHighestPointOnArc = playerPositionRelativeYPos + _overshootYAxis;
+        //
+        //if (playerPositionRelativeYPos < 0)
+        //    objHighestPointOnArc = _overshootYAxis;
+        //
+        //Vector3 objVelocity = CalculateJumpVelocity(obj.transform.position, transform.position, objHighestPointOnArc);
+        //
+        //obj.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        //obj.GetComponent<Rigidbody>().velocity = objVelocity;
+        //obj.GetComponent<Rigidbody>().AddForce(objVelocity, ForceMode.Impulse);
+        StopGrappling();
     }
 }

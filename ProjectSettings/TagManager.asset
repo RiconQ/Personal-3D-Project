@@ -16,7 +16,7 @@ TagManager:
   - IsGround
   - IsGrappable
   - IsLedge
-  - 
+  - IsThrowable
   - 
   - 
   - 

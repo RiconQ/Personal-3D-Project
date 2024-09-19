@@ -42,6 +42,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "LeftMouse",
+                    "type": "Button",
+                    "id": "aaa26064-9833-4d85-b349-98449982864c",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Hold",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "RightMouse",
                     "type": "Button",
                     "id": "ae0e0a1a-294d-473c-9aac-0f3f398b4ee5",
@@ -159,6 +168,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "RightMouse",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "514f6ab6-a137-47d4-b99d-e71bdbe03f2c",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "LeftMouse",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

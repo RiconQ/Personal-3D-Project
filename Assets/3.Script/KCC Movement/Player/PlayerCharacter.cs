@@ -1,7 +1,7 @@
 using KinematicCharacterController;
 using System;
+using System.Collections.Generic;
 using TMPro;
-using TMPro.EditorUtilities;
 using UnityEngine;
 
 public enum ECrouchInput
@@ -31,7 +31,10 @@ public struct CharacterInput
     public Vector2 Move;
     public bool Jump;
     public ECrouchInput Crouch;
+    public bool LeftMouse;
+    public bool LeftMouseReleased;
     public bool RightMouse;
+    public bool RightMouseReleased;
 }
 
 public struct RequestedInput
@@ -41,7 +44,10 @@ public struct RequestedInput
     public bool Jump;
     public bool Crouch;
     public bool CrouchInAir;
+    public bool LeftMouse;
+    public bool LeftMouseReleased;
     public bool RightMouse;
+    public bool RightMouseReleased;
 }
 
 public class PlayerState
@@ -66,6 +72,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private Sliding _sliding;
     private LedgeClimb _ledgeClimb;
     private Grappling _grappling;
+    private ObjectThrow _objectThrow;
 
     [Space]
     [Header("Movement")]
@@ -108,6 +115,8 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     private Collider[] _uncrouchOverlapResults;
 
+    [HideInInspector] public List<Collider> ignoredCollider = new List<Collider>();
+
     #endregion Code Variables
 
     [Header("Debug")]
@@ -134,6 +143,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         _sliding = GetComponent<Sliding>();
         _ledgeClimb = GetComponent<LedgeClimb>();
         _grappling = GetComponent<Grappling>();
+        _objectThrow = GetComponent<ObjectThrow>();
     }
 
     private void Update()
@@ -203,16 +213,43 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         }
         #endregion
 
+        #region LeftMouse
+        requestedInput.LeftMouse = input.LeftMouse;
+        requestedInput.LeftMouseReleased = input.LeftMouseReleased;
+        if (requestedInput.LeftMouse && _objectThrow.ObjectToThrow == null)
+        {
+            _objectThrow.PickUpObject();
+        }
+        if (requestedInput.LeftMouseReleased && _objectThrow.ReadyToThrow)
+        {
+            //Debug.Log("Throw");
+            _objectThrow.Throw();
+        }
+        #endregion
+
         #region RightMouse
         requestedInput.RightMouse = input.RightMouse;
-        if (requestedInput.RightMouse && !_grappling.IsGrappline)
+        requestedInput.RightMouseReleased = input.RightMouseReleased;
+        if (!_objectThrow.ReadyToThrow)
         {
-            _grappling.ShootGrapple();
-        }
-        else if(requestedInput.RightMouse && _grappling.HasGrapplePoint)
-        {
-            //Jump to GrapplePoint
-            _grappling.StopGrappling();
+            if (requestedInput.RightMouse && !_grappling.IsGrappling)
+            {
+                _grappling.ShootGrapple();
+            }
+            else if (requestedInput.RightMouse && _grappling.HasGrapplePoint)
+            {
+                //Jump to GrapplePoint
+                _grappling.StopGrappling();
+            }
+            else if(requestedInput.RightMouseReleased && _grappling.HasGrapplePoint)
+            {
+                _grappling.ExecuteGrapple();
+            }
+            else if(requestedInput.RightMouseReleased && _grappling.CurrentGrabedObject != null)
+            {
+                Debug.Log("Pull");
+                _grappling.PullObject();
+            }
         }
         #endregion
     }
@@ -252,7 +289,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             return;
         }
 
-        if(_grappling.IsGrappleExecuting == true)
+        if (_grappling.IsGrappleExecuting == true)
         {
             _grappling.JumpToPosition(ref currentVelocity);
             return;
@@ -535,13 +572,17 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     }
     public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
-        if(_grappling.IsGrappline)
+        if (_grappling.IsGrappling)
         {
             //If Hit Enemy -> Enemy Jump
         }
     }
     public bool IsColliderValidForCollisions(Collider coll)
     {
+        if (ignoredCollider.Contains(coll))
+        {
+            return false;
+        }
         return true;
     }
 

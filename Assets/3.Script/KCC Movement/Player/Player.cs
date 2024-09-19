@@ -11,6 +11,7 @@ public class Player : MonoBehaviour
     private Sliding _sliding;
     private LedgeClimb _ledgeClimb;
     private Grappling _grappling;
+    private ObjectThrow _objectThrow;
   
     [Header("Camera")]
     [SerializeField] private PlayerCamera _playerCamera;
@@ -44,6 +45,7 @@ public class Player : MonoBehaviour
         _sliding.Initialize();
         _ledgeClimb.Initialize();
         _grappling.Initialize();
+        _objectThrow.Initialize();
 
         //Camera
         _playerCamera.Initialize(_playerCharacter.GetCameraTarget());
@@ -61,6 +63,7 @@ public class Player : MonoBehaviour
         _sliding = GetComponentInChildren<Sliding>();
         _ledgeClimb = GetComponentInChildren<LedgeClimb>();
         _grappling = GetComponentInChildren<Grappling>();
+        _objectThrow = GetComponentInChildren<ObjectThrow>();
     }
 
     private void OnDestroy()
@@ -87,7 +90,10 @@ public class Player : MonoBehaviour
             Jump        = input.Jump.WasPressedThisFrame(),
             Crouch      = input.Crouch.WasPressedThisFrame() ?
                             ECrouchInput.Toggle : ECrouchInput.None,
-            RightMouse = input.RightMouse.WasPressedThisFrame()
+            LeftMouse = input.LeftMouse.WasPressedThisFrame(),
+            LeftMouseReleased = input.LeftMouse.WasReleasedThisFrame(),
+            RightMouse = input.RightMouse.WasPressedThisFrame(),
+            RightMouseReleased = input.RightMouse.WasReleasedThisFrame()
         };
 
         _ledgeClimb.UpdateLedgeClimb();
@@ -122,6 +128,7 @@ public class Player : MonoBehaviour
         _stanceVignette.UpdateVignette(deltaTime, state.Stance);
 
         _grappling.LateUpdateGrapple();
+        _objectThrow.LateUpdateThrow();
     }
 
     public void Teleport(Vector3 position)

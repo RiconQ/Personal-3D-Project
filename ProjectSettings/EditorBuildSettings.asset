@@ -9,5 +9,5 @@ EditorBuildSettings:
     path: Assets/1.Scene/LegacyMovement/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
   m_configObjects:
-    com.unity.input.settings: {fileID: 11400000, guid: f1f942911e1097a4ca2893103dec2ef7,
+    com.unity.input.settings: {fileID: 11400000, guid: 29666071e96ed6043901968236bdbba9,
       type: 2}
