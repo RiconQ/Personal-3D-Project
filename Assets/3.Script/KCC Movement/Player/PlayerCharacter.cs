@@ -66,6 +66,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private Transform _cameraTarget;
     [SerializeField] private PlayerCamera _playerCamera;
     [SerializeField] private Transform _cameraTransform;
+    [SerializeField] private Player _player;
 
     // Movement Reference
     private Jump _jump;
@@ -216,39 +217,45 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         #region LeftMouse
         requestedInput.LeftMouse = input.LeftMouse;
         requestedInput.LeftMouseReleased = input.LeftMouseReleased;
-        if (requestedInput.LeftMouse && _objectThrow.ObjectToThrow == null)
+        if (!_player.WeaponHolder.HasWaepon())
         {
-            _objectThrow.PickUpObject();
-        }
-        if (requestedInput.LeftMouseReleased && _objectThrow.ReadyToThrow)
-        {
-            //Debug.Log("Throw");
-            _objectThrow.Throw();
+            if (requestedInput.LeftMouse && _objectThrow.ObjectToThrow == null)
+            {
+                _objectThrow.PickUpObject();
+            }
+            if (requestedInput.LeftMouseReleased && _objectThrow.ReadyToThrow)
+            {
+                //Debug.Log("Throw");
+                _objectThrow.Throw();
+            }
         }
         #endregion
 
         #region RightMouse
         requestedInput.RightMouse = input.RightMouse;
         requestedInput.RightMouseReleased = input.RightMouseReleased;
-        if (!_objectThrow.ReadyToThrow)
+        if (!_player.WeaponHolder.HasWaepon())
         {
-            if (requestedInput.RightMouse && !_grappling.IsGrappling)
+            if (!_objectThrow.ReadyToThrow)
             {
-                _grappling.ShootGrapple();
-            }
-            else if (requestedInput.RightMouse && _grappling.HasGrapplePoint)
-            {
-                //Jump to GrapplePoint
-                _grappling.StopGrappling();
-            }
-            else if(requestedInput.RightMouseReleased && _grappling.HasGrapplePoint)
-            {
-                _grappling.ExecuteGrapple();
-            }
-            else if(requestedInput.RightMouseReleased && _grappling.CurrentGrabedObject != null)
-            {
-                Debug.Log("Pull");
-                _grappling.PullObject();
+                if (requestedInput.RightMouse && !_grappling.IsGrappling)
+                {
+                    _grappling.ShootGrapple();
+                }
+                else if (requestedInput.RightMouse && _grappling.HasGrapplePoint)
+                {
+                    //Jump to GrapplePoint
+                    _grappling.StopGrappling();
+                }
+                else if (requestedInput.RightMouseReleased && _grappling.HasGrapplePoint)
+                {
+                    _grappling.ExecuteGrapple();
+                }
+                else if (requestedInput.RightMouseReleased && _grappling.CurrentGrabedObject != null)
+                {
+                    Debug.Log("Pull");
+                    _grappling.PullObject();
+                }
             }
         }
         #endregion
@@ -335,7 +342,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             // Continue sliding
             else
             {
-                _playerCamera.DoFov(100f);
+                _playerCamera.DoFov(110f);
                 _sliding.ContinueSliding(ref currentVelocity, deltaTime, groundedMovement);
             }
         }
@@ -344,11 +351,11 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         {
             if (_motor.Velocity.magnitude > 50)
             {
-                _playerCamera.DoFov(100f);
+                _playerCamera.DoFov(110f);
             }
             else
             {
-                _playerCamera.DoFov(80f);
+                _playerCamera.DoFov(100f);
             }
             _jump.timeSinceUngrounded += deltaTime;
 
@@ -567,7 +574,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         if (currentState.Stance == EStance.Stand || currentState.Stance == EStance.Crouch)
         {
             if (_motor.Velocity.magnitude < 40f)
-                _playerCamera.DoFov(80f);
+                _playerCamera.DoFov(100f);
         }
     }
     public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)

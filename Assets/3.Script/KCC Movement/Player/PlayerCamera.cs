@@ -41,7 +41,7 @@ public class PlayerCamera : MonoBehaviour
     public void DoFov(float endValue)
     {
         _mainCamera.DOFieldOfView(endValue, 0.25f);
-        if(endValue > 90f)
+        if(endValue > 100f)
         {
             _player.ChromaticAberrationEffect.ActiveChromatic(true);
             _player.ChromaticAberrationEffect.SetIntensity(1f);

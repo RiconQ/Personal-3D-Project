@@ -1,4 +1,5 @@
 using DG.Tweening.Core.Easing;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
@@ -29,6 +30,10 @@ public class Player : MonoBehaviour
 
     private PlayerInputAction _inputAction;
 
+    [Header("Weapon")]
+    [SerializeField]private K_WeaponHolder _weaponHolder;
+    public K_WeaponHolder WeaponHolder => _weaponHolder;
+
     private void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -55,6 +60,10 @@ public class Player : MonoBehaviour
         _cameraLean.Initialize();
         _stanceVignette.Initialize(_volume.profile);
         _chromaticAberrationEffect.Initialize(_volume.profile);
+
+        //Weapon Component
+        _weaponHolder.Initialize();
+
     }
 
     private void GetMovementComponent()
@@ -85,15 +94,27 @@ public class Player : MonoBehaviour
         // Get Character input and update
         var characterInput = new CharacterInput
         {
-            Rotation    = _playerCamera.transform.rotation,
-            Move        = input.Move.ReadValue<Vector2>(),
-            Jump        = input.Jump.WasPressedThisFrame(),
-            Crouch      = input.Crouch.WasPressedThisFrame() ?
-                            ECrouchInput.Toggle : ECrouchInput.None,
-            LeftMouse = input.LeftMouse.WasPressedThisFrame(),
-            LeftMouseReleased = input.LeftMouse.WasReleasedThisFrame(),
-            RightMouse = input.RightMouse.WasPressedThisFrame(),
-            RightMouseReleased = input.RightMouse.WasReleasedThisFrame()
+            Rotation            = _playerCamera.transform.rotation,
+            Move                = input.Move.ReadValue<Vector2>(),
+            Jump                = input.Jump.WasPressedThisFrame(),
+            Crouch              = input.Crouch.WasPressedThisFrame() ?
+                                    ECrouchInput.Toggle : ECrouchInput.None,
+            LeftMouse           = input.LeftMouse.WasPressedThisFrame(),
+            LeftMouseReleased   = input.LeftMouse.WasReleasedThisFrame(),
+            RightMouse          = input.RightMouse.WasPressedThisFrame(),
+            RightMouseReleased  = input.RightMouse.WasReleasedThisFrame()
+        };
+
+        // Get Weapon Input and Update
+        var controllerInput = new ControllerInput
+        {
+            Kick                = input.Kick.WasPressedThisFrame(),
+            KickReleased        = input.Kick.WasReleasedThisFrame(),
+            LeftMouse           = input.LeftMouse.WasPressedThisFrame(),
+            LeftMouseReleased   = input.LeftMouse.WasReleasedThisFrame(),
+            RightMouse          = input.RightMouse.WasPressedThisFrame(),
+            RightMouseReleased  = input.RightMouse.WasReleasedThisFrame(),
+            Crouch              = input.Crouch.WasPressedThisFrame()
         };
 
         _ledgeClimb.UpdateLedgeClimb();
@@ -112,7 +133,11 @@ public class Player : MonoBehaviour
                 Teleport(hit.point);
             }
         }
-        #endif
+#endif
+
+        //Weapon Update
+        _weaponHolder.UpdateInput(controllerInput, deltaTime);
+        _weaponHolder.UpdateController(deltaTime);
     }
 
     private void LateUpdate()
