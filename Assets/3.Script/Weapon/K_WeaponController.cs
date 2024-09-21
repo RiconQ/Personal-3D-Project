@@ -31,9 +31,6 @@ public abstract class K_WeaponController : MonoBehaviour
     protected RequestedControllerInput _requestedInput;
     protected PlayerInputAction _inputAction;
 
-    public const float KickCoolDown = 0.8f;
-    [SerializeField] protected bool _canKick = true;
-
     public virtual void Initialize()
     {
         _inputAction = new PlayerInputAction();
@@ -42,8 +39,11 @@ public abstract class K_WeaponController : MonoBehaviour
     public virtual void UpdateController(float deltaTime)
     {
     }
+    public abstract void DropWeapon();
     public abstract void LateUpdateController(float deltaTime);
     public abstract void UpdateInput(ControllerInput weaponInput, float deltaTime);
+    public abstract void Charge();
+    public abstract void Release();
     public void PlayAnimation(string animationName, float fixedTransitionDuration = 0.25f)
     {
         _animator.CrossFadeInFixedTime(animationName, fixedTransitionDuration);

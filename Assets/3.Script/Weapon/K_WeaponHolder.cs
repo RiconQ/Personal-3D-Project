@@ -2,8 +2,23 @@ using UnityEngine;
 
 public class K_WeaponHolder : MonoBehaviour
 {
+    public static K_WeaponHolder instance = null;
+
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(instance);
+        }
+    }
+
     public K_WeaponController[] weaponArray;
 
+    public bool isCharging = false;
     public void Initialize()
     {
         foreach (var weapon in weaponArray)
@@ -16,7 +31,8 @@ public class K_WeaponHolder : MonoBehaviour
     {
         foreach (var weapon in weaponArray)
         {
-            weapon.UpdateController(deltaTime);
+            if (weapon.gameObject.activeSelf)
+                weapon.UpdateController(deltaTime);
         }
     }
 
@@ -24,7 +40,8 @@ public class K_WeaponHolder : MonoBehaviour
     {
         foreach (var weapon in weaponArray)
         {
-            weapon.LateUpdateController(deltaTime);
+            if (weapon.gameObject.activeSelf)
+                weapon.LateUpdateController(deltaTime);
         }
     }
 
@@ -32,7 +49,8 @@ public class K_WeaponHolder : MonoBehaviour
     {
         foreach (var weapon in weaponArray)
         {
-            weapon.UpdateInput(input, deltaTime);
+            if (weapon.gameObject.activeSelf)
+                weapon.UpdateInput(input, deltaTime);
         }
     }
 
@@ -52,5 +70,15 @@ public class K_WeaponHolder : MonoBehaviour
             if (weaponArray[i].gameObject.activeSelf) return i;
         }
         return -1;
+    }
+
+    public void PickUpWeapon(int weaponIndex)
+    {
+        weaponArray[weaponIndex].gameObject.SetActive(true);
+    }
+
+    public void DropWeapon(int weaponIndex)
+    {
+        weaponArray[weaponIndex].gameObject.SetActive(false);
     }
 }

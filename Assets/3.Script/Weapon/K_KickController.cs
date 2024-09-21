@@ -2,12 +2,27 @@ using UnityEngine;
 
 public class K_KickController : K_WeaponController
 {
-    private K_WeaponHolder _weaponHolder;
-    public bool isCharging {  get; private set; }
+    public static K_KickController instance = null;
+
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(instance);
+        }
+    }
+
+    [SerializeField] private float _kickCoolDown = 1f;
+
+    public bool canKick { get; private set; }
     public override void Initialize()
     {
         base.Initialize();
-        _weaponHolder = FindObjectOfType<K_WeaponHolder>();
+        canKick = true;
     }
 
     public override void UpdateController(float deltaTime)
@@ -27,43 +42,58 @@ public class K_KickController : K_WeaponController
         _requestedInput.RightMouseReleased = weaponInput.RightMouseReleased;
         _requestedInput.Crouch = weaponInput.Crouch;
 
-        if(!isCharging)
+        if (!K_WeaponHolder.instance.isCharging)
         {
-            if(_requestedInput.Kick)
+            //Debug.Log("ischarging false");
+            if (_requestedInput.Kick && canKick)
             {
                 Charge();
             }
         }
-        else if(_requestedInput.KickReleased)
+        else
         {
-            Release();
+            if (_requestedInput.KickReleased)
+            {
+                Release();
+            }
         }
     }
 
-    private void Charge()
+    public override void Charge()
     {
-        isCharging = true;
+        canKick = false;
+        K_WeaponHolder.instance.isCharging = true;
         _animator.Play("Kick Charge", -1, 0f);
-        var currentWeapon = _weaponHolder.GetCurrentWeapon();
+        var currentWeapon = K_WeaponHolder.instance.GetCurrentWeapon();
         if (currentWeapon != -1)
         {
-            _weaponHolder.weaponArray[currentWeapon].animator.Play("Kick Charge", -1, 0f);
+            K_WeaponHolder.instance.weaponArray[currentWeapon].animator.Play("Kick Charge", -1, 0f);
         }
     }
 
-    private void Release()
+    public override void Release()
     {
-        isCharging = false;
+        K_WeaponHolder.instance.isCharging = false;
         _animator.Play("Kick Released", -1, 0f);
-        var currentWeapon = _weaponHolder.GetCurrentWeapon();
+        var currentWeapon = K_WeaponHolder.instance.GetCurrentWeapon();
         if (currentWeapon != -1)
         {
-            _weaponHolder.weaponArray[currentWeapon].animator.Play("Kick Released", -1, 0f);
+            K_WeaponHolder.instance.weaponArray[currentWeapon].animator.Play("Kick Released", -1, 0f);
         }
+        Invoke(nameof(ResetKick), _kickCoolDown);
+    }
+
+    private void ResetKick()
+    {
+        canKick = true;
     }
 
     private void OnEnable()
     {
         PlayAnimation("Idle");
+    }
+
+    public override void DropWeapon()
+    {
     }
 }
