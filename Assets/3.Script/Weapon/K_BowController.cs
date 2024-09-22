@@ -29,12 +29,14 @@ public class K_BowController : K_WeaponController
             //Debug.Log($"_requestedInput.RightMouse {_requestedInput.RightMouse}");
             if (_requestedInput.RightMouse)
             {
+                _lastInput = EInput.RightMouse;
                 _animator.SetTrigger("Charge");
                 _animator.SetInteger("AttackIndex", 3);
                 Charge();
             }
             else if (_requestedInput.LeftMouse && _canShoot)
             {
+                _lastInput = EInput.LeftMouse;
                 _canShoot = false;
                 _animator.SetTrigger("Charge");
                 _animator.SetInteger("AttackIndex", 0);
@@ -43,13 +45,15 @@ public class K_BowController : K_WeaponController
         }
         else if(K_WeaponHolder.instance.isCharging && !K_KickController.instance.kickCharging)
         {
-            if (_requestedInput.RightMouseReleased)
+            if (_requestedInput.RightMouseReleased && _lastInput == EInput.RightMouse)
             {
+                _lastInput = EInput.RightMouseReleased;
                 _animator.SetTrigger("Release");
                 Release();
             }
-            else if (_requestedInput.LeftMouseReleased)
+            else if (_requestedInput.LeftMouseReleased && _lastInput == EInput.LeftMouse)
             {
+                _lastInput = EInput.LeftMouseReleased;
                 _animator.SetTrigger("Release");
                 Release();
             }
@@ -69,6 +73,11 @@ public class K_BowController : K_WeaponController
     public override void DropWeapon()
     {
         K_WeaponHolder.instance.DropWeapon(1);
+    }
+
+    private void OnEnable()
+    {
+        ResetVar();
     }
 
     public void ResetShoot()

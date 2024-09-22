@@ -88,6 +88,9 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     [SerializeField] private float _exitWallTime = 0.2f;
     public float ExitWallTime => _exitWallTime;
 
+    [Header("Weapon")]
+    [SerializeField] private K_SwordController _sword;
+
     [Header("Air Control")]
     [SerializeField] private float _airSpeed = 15f;
     [SerializeField] private float _airAcceleration = 70f;
@@ -575,6 +578,12 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         {
             if (_motor.Velocity.magnitude < 40f)
                 _playerCamera.DoFov(100f);
+        }
+
+        
+        if (_sword.gameObject.activeSelf && _sword.IsAirStrike)
+        {
+            _sword.AirStrike();
         }
     }
     public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)

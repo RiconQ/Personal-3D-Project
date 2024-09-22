@@ -6387,6 +6387,7 @@ MonoBehaviour:
   _walkResponse: 25
   _crouchResponse: 20
   _exitWallTime: 0.5
+  _sword: {fileID: 235619078740975340}
   _airSpeed: 15
   _airAcceleration: 125
   _standHeight: 2
@@ -15415,8 +15416,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5187263932586498032}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.50897473, y: -0.000000022351742, z: -0.0000000037252894,
-    w: 0.86078155}
+  m_LocalRotation: {x: -0.00000007549789, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0, y: 0, z: -0.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -15447,7 +15447,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5187898164108606757}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.00000004371139, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.00000007549789, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0, y: 0, z: -0.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -15479,7 +15479,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5188079149776571244}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.015993726, y: -0, z: -0, w: -0.9998721}
+  m_LocalRotation: {x: 0.00000010331605, y: -0, z: -0, w: -1}
   m_LocalPosition: {x: -0, y: 0, z: -0.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -15530,7 +15530,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5186260018016103060}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.30981043, y: 0.11423957, z: -0.025156207, w: -0.9435751}
+  m_LocalRotation: {x: 0.00000010331605, y: -0, z: -0, w: -1}
   m_LocalPosition: {x: -0, y: 0, z: -0.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -15616,7 +15616,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _animator: {fileID: 5091583085616273803}
-  _kickCoolDown: 0.8
+  _kickCoolDown: 1
 --- !u!1 &5187124191513689035
 GameObject:
   m_ObjectHideFlags: 0

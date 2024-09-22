@@ -24,12 +24,25 @@ public struct RequestedControllerInput
     public bool Crouch;
 }
 
+public enum EInput
+{
+    Kick,
+    KickReleased,
+    LeftMouse,
+    LeftMouseReleased,
+    RightMouse,
+    RightMouseReleased,
+    Crouch,
+    None
+}
+
 public abstract class K_WeaponController : MonoBehaviour
 {
     [SerializeField] protected Animator _animator;
     public Animator animator => _animator;
     protected RequestedControllerInput _requestedInput;
     protected PlayerInputAction _inputAction;
+    protected EInput _lastInput;
 
     public virtual void Initialize()
     {
