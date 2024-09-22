@@ -67,4 +67,8 @@ public class K_SwordController : K_WeaponController
     {
         K_WeaponHolder.instance.isCharging = false;
     }
+
+    public override void ResetVar()
+    {
+    }
 }

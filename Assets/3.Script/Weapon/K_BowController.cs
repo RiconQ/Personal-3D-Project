@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class K_BowController : K_WeaponController
 {
+    private bool _canShoot = true;
     public override void Initialize()
     {
         base.Initialize();
@@ -22,21 +23,32 @@ public class K_BowController : K_WeaponController
         _requestedInput.RightMouse = weaponInput.RightMouse;
         _requestedInput.RightMouseReleased = weaponInput.RightMouseReleased;
         _requestedInput.Crouch = weaponInput.Crouch;
-       
-        if (!K_WeaponHolder.instance.isCharging)
+
+        if (!K_WeaponHolder.instance.isCharging && !K_KickController.instance.kickCharging)
         {
-            Debug.Log($"_requestedInput.RightMouse {_requestedInput.RightMouse}");
+            //Debug.Log($"_requestedInput.RightMouse {_requestedInput.RightMouse}");
             if (_requestedInput.RightMouse)
             {
-                Debug.Log("adsda");
                 _animator.SetTrigger("Charge");
                 _animator.SetInteger("AttackIndex", 3);
                 Charge();
             }
+            else if (_requestedInput.LeftMouse && _canShoot)
+            {
+                _canShoot = false;
+                _animator.SetTrigger("Charge");
+                _animator.SetInteger("AttackIndex", 0);
+                Charge();
+            }
         }
-        else
+        else if(K_WeaponHolder.instance.isCharging && !K_KickController.instance.kickCharging)
         {
             if (_requestedInput.RightMouseReleased)
+            {
+                _animator.SetTrigger("Release");
+                Release();
+            }
+            else if (_requestedInput.LeftMouseReleased)
             {
                 _animator.SetTrigger("Release");
                 Release();
@@ -57,5 +69,15 @@ public class K_BowController : K_WeaponController
     public override void DropWeapon()
     {
         K_WeaponHolder.instance.DropWeapon(1);
+    }
+
+    public void ResetShoot()
+    {
+        _canShoot = true;
+    }
+
+    public override void ResetVar()
+    {
+        ResetShoot();
     }
 }

@@ -44,6 +44,7 @@ public abstract class K_WeaponController : MonoBehaviour
     public abstract void UpdateInput(ControllerInput weaponInput, float deltaTime);
     public abstract void Charge();
     public abstract void Release();
+    public abstract void ResetVar();
     public void PlayAnimation(string animationName, float fixedTransitionDuration = 0.25f)
     {
         _animator.CrossFadeInFixedTime(animationName, fixedTransitionDuration);

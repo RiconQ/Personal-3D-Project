@@ -3,6 +3,7 @@ using UnityEngine;
 public class K_KickController : K_WeaponController
 {
     public static K_KickController instance = null;
+    public bool kickCharging { get; private set; }
 
     private void Awake()
     {
@@ -23,6 +24,7 @@ public class K_KickController : K_WeaponController
     {
         base.Initialize();
         canKick = true;
+        kickCharging = false;
     }
 
     public override void UpdateController(float deltaTime)
@@ -42,7 +44,7 @@ public class K_KickController : K_WeaponController
         _requestedInput.RightMouseReleased = weaponInput.RightMouseReleased;
         _requestedInput.Crouch = weaponInput.Crouch;
 
-        if (!K_WeaponHolder.instance.isCharging)
+        if (!K_WeaponHolder.instance.isCharging && !kickCharging)
         {
             //Debug.Log("ischarging false");
             if (_requestedInput.Kick && canKick)
@@ -50,7 +52,7 @@ public class K_KickController : K_WeaponController
                 Charge();
             }
         }
-        else
+        else if(!K_WeaponHolder.instance.isCharging && kickCharging)
         {
             if (_requestedInput.KickReleased)
             {
@@ -62,7 +64,7 @@ public class K_KickController : K_WeaponController
     public override void Charge()
     {
         canKick = false;
-        K_WeaponHolder.instance.isCharging = true;
+        kickCharging = true;
         _animator.Play("Kick Charge", -1, 0f);
         var currentWeapon = K_WeaponHolder.instance.GetCurrentWeapon();
         if (currentWeapon != -1)
@@ -73,7 +75,7 @@ public class K_KickController : K_WeaponController
 
     public override void Release()
     {
-        K_WeaponHolder.instance.isCharging = false;
+        kickCharging = false;
         _animator.Play("Kick Released", -1, 0f);
         var currentWeapon = K_WeaponHolder.instance.GetCurrentWeapon();
         if (currentWeapon != -1)
@@ -95,5 +97,13 @@ public class K_KickController : K_WeaponController
 
     public override void DropWeapon()
     {
+    }
+
+    public override void ResetVar()
+    {
+        if (K_WeaponHolder.instance.GetCurrentWeapon() != -1)
+        {
+            K_WeaponHolder.instance.weaponArray[K_WeaponHolder.instance.GetCurrentWeapon()].ResetVar();
+        }
     }
 }
