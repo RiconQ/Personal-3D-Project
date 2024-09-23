@@ -72,7 +72,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private Jump _jump;
     private Sliding _sliding;
     private LedgeClimb _ledgeClimb;
-    private Grappling _grappling;
     private ObjectThrow _objectThrow;
 
     [Space]
@@ -146,7 +145,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         _jump = GetComponent<Jump>();
         _sliding = GetComponent<Sliding>();
         _ledgeClimb = GetComponent<LedgeClimb>();
-        _grappling = GetComponent<Grappling>();
         _objectThrow = GetComponent<ObjectThrow>();
     }
 
@@ -234,6 +232,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         }
         #endregion
 
+        /*
         #region RightMouse
         requestedInput.RightMouse = input.RightMouse;
         requestedInput.RightMouseReleased = input.RightMouseReleased;
@@ -262,6 +261,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             }
         }
         #endregion
+        */
     }
 
     public void UpdateBody(float deltaTime)
@@ -299,11 +299,13 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             return;
         }
 
+        /*
         if (_grappling.IsGrappleExecuting == true)
         {
             _grappling.JumpToPosition(ref currentVelocity);
             return;
         }
+        */
 
         // If player on Ground
         if (_motor.GroundingStatus.IsStableOnGround)
@@ -588,10 +590,12 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     }
     public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport)
     {
+        /*
         if (_grappling.IsGrappling)
         {
             //If Hit Enemy -> Enemy Jump
         }
+        */
     }
     public bool IsColliderValidForCollisions(Collider coll)
     {

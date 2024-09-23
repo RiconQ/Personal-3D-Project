@@ -108,7 +108,8 @@ public class Grappling : MonoBehaviour
             Invoke(nameof(StopGrappling), 0.1f);
         }
 
-        _lr.enabled = true;
+        _lr.gameObject.SetActive(true);
+        //_lr.enabled = true;
         _lr.positionCount = 2;
         _lr.SetPosition(0, _gunTip.transform.position);
         _lr.SetPosition(1, _grapplePoint);
@@ -158,7 +159,9 @@ public class Grappling : MonoBehaviour
     {
         Debug.Log("Stop Grappling");
 
-        _lr.enabled = false;
+        
+        //_lr.enabled = false;
+        _lr.gameObject.SetActive(false);
 
         _isGrappleExecuting = false;
         _isGrappling = false;

@@ -11,7 +11,6 @@ public class Player : MonoBehaviour
     private Jump _jump;
     private Sliding _sliding;
     private LedgeClimb _ledgeClimb;
-    private Grappling _grappling;
     private ObjectThrow _objectThrow;
   
     [Header("Camera")]
@@ -20,6 +19,9 @@ public class Player : MonoBehaviour
     [Space]
     [SerializeField] private CameraSpring _cameraSpring;
     [SerializeField] private CameraLean _cameraLean;
+
+    [Header("Chain Dagger")]
+    [SerializeField] private K_DaggerController _daggerController;
 
     [Header("FX")]
     [Space]
@@ -49,7 +51,6 @@ public class Player : MonoBehaviour
         _jump.Initialize();
         _sliding.Initialize();
         _ledgeClimb.Initialize();
-        _grappling.Initialize();
         _objectThrow.Initialize();
 
         //Camera
@@ -64,6 +65,7 @@ public class Player : MonoBehaviour
         //Weapon Component
         _weaponHolder.Initialize();
 
+        _daggerController.Initialize();
     }
 
     private void GetMovementComponent()
@@ -71,7 +73,6 @@ public class Player : MonoBehaviour
         _jump = GetComponentInChildren<Jump>();
         _sliding = GetComponentInChildren<Sliding>();
         _ledgeClimb = GetComponentInChildren<LedgeClimb>();
-        _grappling = GetComponentInChildren<Grappling>();
         _objectThrow = GetComponentInChildren<ObjectThrow>();
     }
 
@@ -118,7 +119,6 @@ public class Player : MonoBehaviour
         };
 
         _ledgeClimb.UpdateLedgeClimb();
-        _grappling.UpdateGrapple();
 
         _playerCharacter.UpdateInput(characterInput, _inputAction.Player.Move.ReadValue<Vector2>());
 
@@ -138,6 +138,9 @@ public class Player : MonoBehaviour
         //Weapon Update
         _weaponHolder.UpdateInput(controllerInput, deltaTime);
         _weaponHolder.UpdateController(deltaTime);
+
+        //Chain Dagger
+        _daggerController.UpdateInputDagger(controllerInput, deltaTime);
     }
 
     private void LateUpdate()
@@ -152,7 +155,6 @@ public class Player : MonoBehaviour
 
         _stanceVignette.UpdateVignette(deltaTime, state.Stance);
 
-        _grappling.LateUpdateGrapple();
         _objectThrow.LateUpdateThrow();
     }
 

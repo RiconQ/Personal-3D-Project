@@ -3,6 +3,7 @@ using UnityEngine;
 public class K_BowController : K_WeaponController
 {
     private bool _canShoot = true;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -43,7 +44,7 @@ public class K_BowController : K_WeaponController
                 Charge();
             }
         }
-        else if(K_WeaponHolder.instance.isCharging && !K_KickController.instance.kickCharging)
+        else if (K_WeaponHolder.instance.isCharging && !K_KickController.instance.kickCharging)
         {
             if (_requestedInput.RightMouseReleased && _lastInput == EInput.RightMouse)
             {
@@ -58,6 +59,13 @@ public class K_BowController : K_WeaponController
                 Release();
             }
         }
+    }
+
+    public void Shoot()
+    {
+        //Enable Arrow
+        var arrow = ArrowPooling.GetObject();
+        arrow.Shoot();
     }
 
 
