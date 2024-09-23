@@ -6037,6 +6037,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _animator: {fileID: 235619078740975339}
+  _cameraTrans: {fileID: 6987672578957703687}
+  _normalRayDistance: 3
+  _normalNumberOfRays: 40
+  _normalConeAngle: 80
+  _attackable:
+    serializedVersion: 2
+    m_Bits: 128
+  _circleRayDistance: 5
+  _numberOfRaycastPerCircle: 30
+  _cylinderRadius: 5
+  _cylinderHeight: 10
+  _numberOfHeightSteps: 5
 --- !u!114 &252495852305872605
 MonoBehaviour:
   m_ObjectHideFlags: 0

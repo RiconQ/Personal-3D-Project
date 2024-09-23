@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.ProBuilder.Shapes;
 
 public class K_SwordController : K_WeaponController
 {
@@ -7,6 +8,24 @@ public class K_SwordController : K_WeaponController
     private PlayerCharacter _pm;
     private bool _isAirStrike = false;
     public bool IsAirStrike => _isAirStrike;
+
+    [Header("Reference")]
+    [SerializeField] private Transform _cameraTrans;
+
+    [Header("Normal Attack Raycast")]
+    [SerializeField] private float _normalRayDistance = 3f;
+    [SerializeField] private int _normalNumberOfRays = 40;
+    [SerializeField] private float _normalConeAngle = 80f;
+    [SerializeField] private LayerMask _attackable;
+
+    [Header("Falling Attack Raycast")]
+    [SerializeField] private float _circleRayDistance = 5f;
+    [SerializeField] private int _numberOfRaycastPerCircle = 30;
+    [SerializeField] private float _cylinderRadius = 5f;
+    [SerializeField] private float _cylinderHeight = 10f;
+    [SerializeField] private int _numberOfHeightSteps = 5;
+
+
 
     public override void Initialize()
     {
@@ -52,7 +71,7 @@ public class K_SwordController : K_WeaponController
                 _animator.SetTrigger("Charge");
                 Charge();
             }
-            else if(_requestedInput.LeftMouse && !_isAttacking && !_pm.Motor.GroundingStatus.IsStableOnGround)
+            else if (_requestedInput.LeftMouse && !_isAttacking && !_pm.Motor.GroundingStatus.IsStableOnGround)
             {
                 _isAttacking = true;
                 _isAirStrike = true;
@@ -63,7 +82,7 @@ public class K_SwordController : K_WeaponController
                 Charge();
             }
         }
-        else if(K_WeaponHolder.instance.isCharging && !K_KickController.instance.kickCharging)
+        else if (K_WeaponHolder.instance.isCharging && !K_KickController.instance.kickCharging)
         {
             if (_requestedInput.RightMouseReleased && _lastInput == EInput.RightMouse)
             {
@@ -71,7 +90,7 @@ public class K_SwordController : K_WeaponController
                 _animator.SetTrigger("Release");
                 Release();
             }
-            else if(_requestedInput.LeftMouseReleased && _lastInput == EInput.LeftMouse && !_isAirStrike)
+            else if (_requestedInput.LeftMouseReleased && _lastInput == EInput.LeftMouse && !_isAirStrike)
             {
                 _lastInput = EInput.LeftMouseReleased;
                 _animator.SetTrigger("Release");
@@ -114,6 +133,86 @@ public class K_SwordController : K_WeaponController
             _lastInput = EInput.None;
             _animator.SetTrigger("Release");
             Release();
+        }
+    }
+
+    public void AttackRaycast()
+    {
+        //Debug.Log("Try To Attack");
+        Vector3 forwardDirection = _cameraTrans.forward;
+
+        Vector3 origin = transform.position;
+
+        float angleStep = _normalConeAngle / (_normalNumberOfRays - 1);
+
+        float startAngle = -_normalConeAngle / 2;
+
+        for (int i = 0; i < _normalNumberOfRays; i++)
+        {
+            float currentAngle = startAngle + (i * angleStep);
+
+            Quaternion rotation = Quaternion.Euler(0, currentAngle, 0);
+            Vector3 rayDirection = rotation * forwardDirection;
+
+            Ray ray = new Ray(origin, rayDirection);
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit, _normalRayDistance, _attackable))
+            {
+                Debug.DrawRay(origin, rayDirection * _normalRayDistance, Color.red, 1f);
+                //Debug.Log("Attack");
+            }
+            else
+            {
+                //Debug.Log("False Attack");
+                Debug.DrawRay(origin, rayDirection * _normalRayDistance, Color.green, 1f);
+            }    
+        }
+    }
+    public void FallingAttackRaycast()
+    {
+        CastCylinderRays();
+    }
+
+    private void CastCylinderRays()
+    {
+        Vector3 origin = transform.position;
+
+        float heightStep = _cylinderHeight / (_numberOfHeightSteps - 1);
+
+        for (int h = 0; h < _numberOfHeightSteps; h++)
+        {
+            float currentHeight = origin.y - (_cylinderHeight / 2) + (h * heightStep);
+            Vector3 heightPosition = new Vector3(origin.x, currentHeight, origin.z);
+
+            CastCircleRays(heightPosition);
+        }
+    }
+
+    private void CastCircleRays(Vector3 center)
+    {
+        float angleStep = 360f / _numberOfRaycastPerCircle;
+
+        for (int i = 0; i < _numberOfRaycastPerCircle; i++)
+        {
+            float currentAngle = i * angleStep;
+
+            float radians = currentAngle * Mathf.Deg2Rad;
+            Vector3 rayDirection = new Vector3(Mathf.Cos(radians), 0, Mathf.Sin(radians));
+
+            rayDirection *= _cylinderRadius;
+            Ray ray = new Ray(center, rayDirection.normalized);
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit, _circleRayDistance, _attackable))
+            {
+                Debug.DrawRay(center, rayDirection.normalized * _circleRayDistance, Color.red, 1f);
+                //Debug.Log("Hit");
+            }
+            else
+            {
+                Debug.DrawRay(center, rayDirection.normalized * _circleRayDistance, Color.green, 1f);
+            }
         }
     }
 }
