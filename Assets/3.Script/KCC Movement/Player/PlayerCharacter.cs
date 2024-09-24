@@ -120,6 +120,9 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     [HideInInspector] public List<Collider> ignoredCollider = new List<Collider>();
 
+    private bool _isPulling = false;
+    private Vector3 _pullingVelocity;
+
     #endregion Code Variables
 
     [Header("Debug")]
@@ -293,6 +296,12 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
         currentState.Acceleration = Vector3.zero;
+
+        if(_isPulling)
+        {
+            currentVelocity = _pullingVelocity;
+            _isPulling = false;
+        }
 
         if (_ledgeClimb.IsLedgeClimbing == true)
         {
@@ -628,5 +637,37 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         {
             _motor.BaseVelocity = Vector3.zero;
         }
+    }
+
+    public void PullTo(Vector3 targetPos, bool withPound = false)
+    {
+        _isPulling = true;
+        _pullingVelocity = Vector3.zero;
+        float num = _playerCamera.transform.position.y - targetPos.y;
+        if(withPound && num >2f && _playerCamera.transform.forward.y.InDegrees() > 30f &&
+            Physics.Raycast(transform.position, Vector3.down, 16f, 1))
+        {
+            _pullingVelocity = (transform.position.DirTo(targetPos) + Vector3.down).normalized * 30f;
+            return;
+        }
+        if(_motor.GroundingStatus.IsStableOnGround)
+        {
+            _motor.ForceUnground(time: 0f);
+        }
+
+        _pullingVelocity = (transform.position.DirTo(targetPos) + Vector3.up).normalized * Mathf.Lerp(36f, 12f, Mathf.Clamp01(num / 6f));
+    }
+
+    public void PullInDir(Vector3 targetPos)
+    {
+        _pullingVelocity = Vector3.zero;
+        _isPulling = true;
+
+        Vector3 dirVec = transform.position.DirTo(targetPos);
+        if(_motor.GroundingStatus.IsStableOnGround)
+        {
+            _motor.ForceUnground(time: 0f);
+        }
+        _pullingVelocity = dirVec * 32f;
     }
 }

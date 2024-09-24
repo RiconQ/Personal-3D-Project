@@ -20,7 +20,7 @@ public class K_PullableControl : MonoBehaviour
     private RaycastHit _hit;
     private float _cameraAspect;
     private float _screenDist;
-    private float _maxScreenDist = 0.15f;
+    private float _maxScreenDist = 0.25f;
     private float _maxDist = 8f;
     private float _closestAngle;
     private float _currentAngle;
@@ -59,7 +59,7 @@ public class K_PullableControl : MonoBehaviour
             return;
         }
         target = null;
-        _maxScreenDist = 0.15f;
+        _maxScreenDist = 0.25f;
 
         if (Player.instance.DaggerController.daggerState != K_DaggerController.EDaggerState.Idle)
         {

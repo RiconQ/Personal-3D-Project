@@ -200,6 +200,14 @@ public class ChainDagger : MonoBehaviour
     public void Pull()
     {
         _chainRoot.gameObject.SetActive(false);
+
+        switch(hoockedCol.gameObject.layer)
+        {
+            case 8: //Interactable
+                hoockedCol.GetComponent<K_IDamageable>().Damage();
+                break;
+
+        }
     }
     private void HitStop(Vector3 pos, Vector3 normal)
     {
