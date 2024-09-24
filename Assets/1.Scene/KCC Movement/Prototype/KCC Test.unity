@@ -689,7 +689,6 @@ Transform:
   - {fileID: 587787028}
   - {fileID: 2117133854}
   - {fileID: 538525919}
-  - {fileID: 1692389071}
   - {fileID: 1440439981}
   - {fileID: 32105974}
   - {fileID: 691972083}
@@ -1261,6 +1260,54 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 259284525}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &267633445
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 267633447}
+  - component: {fileID: 267633446}
+  m_Layer: 0
+  m_Name: PullControl
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &267633446
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 267633445}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c680c4ebce642c945b7174c74e3bc17b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _pullableLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  _pullables: []
+--- !u!4 &267633447
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 267633445}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &326266635
 GameObject:
   m_ObjectHideFlags: 0
@@ -3919,8 +3966,9 @@ GameObject:
   - component: {fileID: 1692389074}
   - component: {fileID: 1692389073}
   - component: {fileID: 1692389072}
+  - component: {fileID: 1692389075}
   m_Layer: 8
-  m_Name: Cube (8)
+  m_Name: PullPointTest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3935,11 +3983,11 @@ Transform:
   m_GameObject: {fileID: 1692389070}
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: -0.5000001, z: 0.5, w: 0.5}
-  m_LocalPosition: {x: -4.869997, y: 8.860002, z: -28.480001}
+  m_LocalPosition: {x: -4.87, y: 4.43, z: -10.97}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 83001663}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 90}
 --- !u!65 &1692389072
 BoxCollider:
@@ -4012,6 +4060,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1692389070}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1692389075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1692389070}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd4951ba73fc469478d6f22ecc8579d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1746052573
 GameObject:
   m_ObjectHideFlags: 0
@@ -16887,7 +16947,7 @@ Animator:
   m_GameObject: {fileID: 6682600969397422995}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: b9ae7a1ae538dd04da8b6720b2bf6a9f, type: 2}
+  m_Controller: {fileID: 9100000, guid: 6d2ecb2005e25ff4ca1cb7bfcdcca1f7, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -16914,6 +16974,40 @@ MonoBehaviour:
   _pivot: {fileID: 6681037581589338219}
   _chainDaggerPrefab: {fileID: 1052109437235744665, guid: 4ecf18f9fc8dac243bc7fe0ccbaad5b5,
     type: 3}
+  _animator: {fileID: 6767272209907673508}
+  pullCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: -1.3328708
+      outSlope: -1.3328708
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.07356998
+    - serializedVersion: 3
+      time: 0.8346272
+      value: 1.049
+      inSlope: 6.0291157
+      outSlope: 6.0291157
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.19289131
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: -18.120853
+      outSlope: -18.120853
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.113848105
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!198 &6807229713155672869
 ParticleSystem:
   m_ObjectHideFlags: 0
@@ -19452,6 +19546,7 @@ SceneRoots:
   - {fileID: 598177642}
   - {fileID: 1366193716}
   - {fileID: 290829705664222345}
+  - {fileID: 1692389071}
   - {fileID: 122735440}
   - {fileID: 4631269273611865563}
   - {fileID: 868283410}
@@ -19459,3 +19554,4 @@ SceneRoots:
   - {fileID: 973682491}
   - {fileID: 88210087}
   - {fileID: 1246194726}
+  - {fileID: 267633447}

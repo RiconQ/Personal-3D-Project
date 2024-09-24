@@ -6,8 +6,11 @@ using UnityEngine.Rendering;
 
 public class Player : MonoBehaviour
 {
+    public static Player instance;
+
     [Header("Player Movement")]
     [SerializeField] private PlayerCharacter _playerCharacter;
+    public PlayerCharacter PlayerCharacter => _playerCharacter;
     private Jump _jump;
     private Sliding _sliding;
     private LedgeClimb _ledgeClimb;
@@ -15,6 +18,7 @@ public class Player : MonoBehaviour
   
     [Header("Camera")]
     [SerializeField] private PlayerCamera _playerCamera;
+    public PlayerCamera PlayerCamera => _playerCamera;
 
     [Space]
     [SerializeField] private CameraSpring _cameraSpring;
@@ -22,6 +26,7 @@ public class Player : MonoBehaviour
 
     [Header("Chain Dagger")]
     [SerializeField] private K_DaggerController _daggerController;
+    public K_DaggerController DaggerController => _daggerController;
 
     [Header("FX")]
     [Space]
@@ -35,6 +40,11 @@ public class Player : MonoBehaviour
     [Header("Weapon")]
     [SerializeField]private K_WeaponHolder _weaponHolder;
     public K_WeaponHolder WeaponHolder => _weaponHolder;
+
+    private void Awake()
+    {
+        instance = this;
+    }
 
     private void Start()
     {
@@ -66,6 +76,8 @@ public class Player : MonoBehaviour
         _weaponHolder.Initialize();
 
         _daggerController.Initialize();
+
+        K_PullableControl.instance.Initialize();
     }
 
     private void GetMovementComponent()
@@ -112,8 +124,10 @@ public class Player : MonoBehaviour
             Kick                = input.Kick.WasPressedThisFrame(),
             KickReleased        = input.Kick.WasReleasedThisFrame(),
             LeftMouse           = input.LeftMouse.WasPressedThisFrame(),
+            LeftMousePressing   = input.LeftMouse.IsPressed(),
             LeftMouseReleased   = input.LeftMouse.WasReleasedThisFrame(),
             RightMouse          = input.RightMouse.WasPressedThisFrame(),
+            RightMousePressing  = input.RightMouse.IsPressed(),
             RightMouseReleased  = input.RightMouse.WasReleasedThisFrame(),
             Crouch              = input.Crouch.WasPressedThisFrame()
         };

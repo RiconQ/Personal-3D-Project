@@ -9,6 +9,7 @@ public struct CameraInput
 public class PlayerCamera : MonoBehaviour
 {
     private Camera _mainCamera;
+    public Camera MainCamera => _mainCamera;
 
     [SerializeField]private Player _player;
 

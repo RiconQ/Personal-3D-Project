@@ -7,8 +7,10 @@ public struct ControllerInput
     public bool Kick;
     public bool KickReleased;
     public bool LeftMouse;
+    public bool LeftMousePressing;
     public bool LeftMouseReleased;
     public bool RightMouse;
+    public bool RightMousePressing;
     public bool RightMouseReleased;
     public bool Crouch;
 }
@@ -18,8 +20,10 @@ public struct RequestedControllerInput
     public bool Kick;
     public bool KickReleased;
     public bool LeftMouse;
+    public bool LeftMousePressing;
     public bool LeftMouseReleased;
     public bool RightMouse;
+    public bool RightMousePressing;
     public bool RightMouseReleased;
     public bool Crouch;
 }
