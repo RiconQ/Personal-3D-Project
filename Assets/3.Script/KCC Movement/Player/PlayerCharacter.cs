@@ -35,6 +35,7 @@ public struct CharacterInput
     public bool LeftMouseReleased;
     public bool RightMouse;
     public bool RightMouseReleased;
+    public bool LeftShift;
 }
 
 public struct RequestedInput
@@ -48,6 +49,7 @@ public struct RequestedInput
     public bool LeftMouseReleased;
     public bool RightMouse;
     public bool RightMouseReleased;
+    public bool LeftShift;
 }
 
 public class PlayerState
@@ -73,6 +75,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private Sliding _sliding;
     private LedgeClimb _ledgeClimb;
     private ObjectThrow _objectThrow;
+    private Dash _dash;
 
     [Space]
     [Header("Movement")]
@@ -149,6 +152,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         _sliding = GetComponent<Sliding>();
         _ledgeClimb = GetComponent<LedgeClimb>();
         _objectThrow = GetComponent<ObjectThrow>();
+        _dash = GetComponent<Dash>();
     }
 
     private void Update()
@@ -265,6 +269,14 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         }
         #endregion
         */
+
+        #region Left Shift
+        requestedInput.LeftShift = input.LeftShift;
+        if (requestedInput.LeftShift)
+        {
+            _dash.DashInit();
+        }
+        #endregion
     }
 
     public void UpdateBody(float deltaTime)
@@ -296,6 +308,12 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
         currentState.Acceleration = Vector3.zero;
+
+        if(_dash.isDashing)
+        {
+            _dash.DashUpdateVelocity(ref currentVelocity, deltaTime);
+            return;
+        }
 
         if(_isPulling)
         {

@@ -83,7 +83,7 @@ public class ChainDagger : MonoBehaviour
         if (hoockedCol)
             return;
 
-        if((int)_dist * 2 != _intDist)
+        if ((int)_dist * 2 != _intDist)
         {
             Physics.Linecast(_lastPos, transform.position, out _hit, 1);
             if (_hit.distance != 0f)
@@ -93,7 +93,7 @@ public class ChainDagger : MonoBehaviour
             }
             _lastPos = transform.position;
         }
-        if(_dist >= ((_targetType == ETargetType.None) ? 12 : 18))
+        if (_dist >= ((_targetType == ETargetType.None) ? 12 : 18))
         {
             Stop();
         }
@@ -124,6 +124,7 @@ public class ChainDagger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        Debug.Log($"Chain Dagger Trigger Enter {other.gameObject.name}");
         if (other.gameObject.layer.Equals("Player"))
         {
             return;
@@ -185,15 +186,15 @@ public class ChainDagger : MonoBehaviour
     {
         if (!gameObject.activeInHierarchy)
         {
-            Debug.Log("!gameObject.activeInHierarchy return false");
+            //Debug.Log("!gameObject.activeInHierarchy return false");
             return false;
         }
-        if(hoockedCol)
+        if (hoockedCol)
         {
-            Debug.Log($"hoockedCol.gameObject.activeInHierarchy : {hoockedCol.gameObject.activeInHierarchy}");
+          //  Debug.Log($"hoockedCol.gameObject.activeInHierarchy : {hoockedCol.gameObject.activeInHierarchy}");
             return hoockedCol.gameObject.activeInHierarchy;
         }
-        Debug.Log("Check State Return true");
+        //Debug.Log("Check State Return true");
         return true;
     }
 
@@ -201,7 +202,7 @@ public class ChainDagger : MonoBehaviour
     {
         _chainRoot.gameObject.SetActive(false);
 
-        switch(hoockedCol.gameObject.layer)
+        switch (hoockedCol.gameObject.layer)
         {
             case 8: //Interactable
                 hoockedCol.GetComponent<K_IDamageable>().Damage();

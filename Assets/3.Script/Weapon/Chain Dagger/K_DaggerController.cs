@@ -98,14 +98,13 @@ public class K_DaggerController : MonoBehaviour
             case EDaggerState.Throw:
                 if (!dagger.CheckState())
                 {
-                    Debug.Log("Catch Dagger");
+                    //Debug.Log("Throw Catch Dagger");
                     _animator.SetTrigger("Catch");
                     StopDagger();
                     break;
                 }
                 if (!dagger.hoockedCol)
                 {
-                    //Debug.Log("Throwing Dagger");
                     _posA = _pivot.position;
                     _posB = dagger.ChainPos.position;
                     _offset = (transform.up + transform.right).normalized;
@@ -133,7 +132,7 @@ public class K_DaggerController : MonoBehaviour
                     if (holding == 1f)
                     {
                         StopDagger();
-                        Debug.Log("Holding 1 => Stop Dagger");
+                        //Debug.Log("Holding 1 => Stop Dagger");
                         break;
                     }
                     dagger.AlignChainMesh(_pivot);
@@ -148,9 +147,10 @@ public class K_DaggerController : MonoBehaviour
                 break;
             case EDaggerState.Return:
                 {
-                    Debug.Log($"!dagger.CheckState() : {!dagger.CheckState()}");
+                    //Debug.Log($"!dagger.CheckState() : {!dagger.CheckState()}");
                     if (!dagger.CheckState())
                     {
+                       // Debug.Log("Return Dagger - Catch");
                         _animator.SetTrigger("Catch");
                         Reset();
                         break;

@@ -15,6 +15,7 @@ public struct ControllerInput
     public bool Crouch;
 }
 
+
 public struct RequestedControllerInput
 {
     public bool Kick;

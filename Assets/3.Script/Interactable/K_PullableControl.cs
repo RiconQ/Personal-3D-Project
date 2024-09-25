@@ -80,7 +80,7 @@ public class K_PullableControl : MonoBehaviour
 
             if(_hit.distance != 0f && _hit.collider.gameObject.layer == 8) //Interactable
             {
-                Debug.Log("Interactable Detect");
+                //Debug.Log("Interactable Detect");
                 _screenPos = Player.instance.PlayerCamera.MainCamera.WorldToScreenPoint(pullable.position);
                 _screenPos.x /= Screen.width;
                 _screenPos.y /= Screen.height;

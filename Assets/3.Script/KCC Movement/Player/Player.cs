@@ -15,6 +15,7 @@ public class Player : MonoBehaviour
     private Sliding _sliding;
     private LedgeClimb _ledgeClimb;
     private ObjectThrow _objectThrow;
+    private Dash _dash;
   
     [Header("Camera")]
     [SerializeField] private PlayerCamera _playerCamera;
@@ -62,6 +63,8 @@ public class Player : MonoBehaviour
         _sliding.Initialize();
         _ledgeClimb.Initialize();
         _objectThrow.Initialize();
+        _dash.Initialize();
+
 
         //Camera
         _playerCamera.Initialize(_playerCharacter.GetCameraTarget());
@@ -86,6 +89,7 @@ public class Player : MonoBehaviour
         _sliding = GetComponentInChildren<Sliding>();
         _ledgeClimb = GetComponentInChildren<LedgeClimb>();
         _objectThrow = GetComponentInChildren<ObjectThrow>();
+        _dash = GetComponentInChildren<Dash>();
     }
 
     private void OnDestroy()
@@ -115,7 +119,9 @@ public class Player : MonoBehaviour
             LeftMouse           = input.LeftMouse.WasPressedThisFrame(),
             LeftMouseReleased   = input.LeftMouse.WasReleasedThisFrame(),
             RightMouse          = input.RightMouse.WasPressedThisFrame(),
-            RightMouseReleased  = input.RightMouse.WasReleasedThisFrame()
+            RightMouseReleased  = input.RightMouse.WasReleasedThisFrame(),
+            LeftShift           = input.Shift.WasPressedThisFrame()
+
         };
 
         // Get Weapon Input and Update
@@ -129,7 +135,7 @@ public class Player : MonoBehaviour
             RightMouse          = input.RightMouse.WasPressedThisFrame(),
             RightMousePressing  = input.RightMouse.IsPressed(),
             RightMouseReleased  = input.RightMouse.WasReleasedThisFrame(),
-            Crouch              = input.Crouch.WasPressedThisFrame()
+            Crouch              = input.Crouch.WasPressedThisFrame(),
         };
 
         _ledgeClimb.UpdateLedgeClimb();

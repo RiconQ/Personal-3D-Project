@@ -4,6 +4,8 @@ public class K_WeaponHolder : MonoBehaviour
 {
     public static K_WeaponHolder instance = null;
 
+    public Transform currentWeapon;
+
     private void Awake()
     {
         if (instance == null)
@@ -14,6 +16,7 @@ public class K_WeaponHolder : MonoBehaviour
         {
             Destroy(instance);
         }
+        currentWeapon = null;
     }
 
     public K_WeaponController[] weaponArray;
@@ -72,13 +75,27 @@ public class K_WeaponHolder : MonoBehaviour
         return -1;
     }
 
-    public void PickUpWeapon(int weaponIndex)
+    public void PickUpWeapon(int weaponIndex, Transform weaponToPick)
     {
+        currentWeapon = weaponToPick;
         weaponArray[weaponIndex].gameObject.SetActive(true);
     }
 
     public void DropWeapon(int weaponIndex)
     {
         weaponArray[weaponIndex].gameObject.SetActive(false);
+    }
+
+    public void DropCurrentWeapon()
+    {
+        switch (currentWeapon.GetComponent<K_WeaponObj>().weapon)
+        {
+            case K_WeaponObj.EWeapon.Sword:
+                weaponArray[0].gameObject.SetActive(false);
+                currentWeapon.GetComponent<K_WeaponObj>().Drop();
+                break;
+            case K_WeaponObj.EWeapon.Bow:
+                break;
+        }
     }
 }

@@ -89,6 +89,15 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Shift"",
+                    ""type"": ""Button"",
+                    ""id"": ""7e076cc8-3632-4110-9894-fac9bd06f573"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -223,6 +232,17 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
                     ""action"": ""Kick"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f7187f32-a806-48dc-9620-2f279a4eef4f"",
+                    ""path"": ""<Keyboard>/leftShift"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Shift"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -238,6 +258,7 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
         m_Player_LeftMouse = m_Player.FindAction("LeftMouse", throwIfNotFound: true);
         m_Player_RightMouse = m_Player.FindAction("RightMouse", throwIfNotFound: true);
         m_Player_Kick = m_Player.FindAction("Kick", throwIfNotFound: true);
+        m_Player_Shift = m_Player.FindAction("Shift", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -306,6 +327,7 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_LeftMouse;
     private readonly InputAction m_Player_RightMouse;
     private readonly InputAction m_Player_Kick;
+    private readonly InputAction m_Player_Shift;
     public struct PlayerActions
     {
         private @PlayerInputAction m_Wrapper;
@@ -317,6 +339,7 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
         public InputAction @LeftMouse => m_Wrapper.m_Player_LeftMouse;
         public InputAction @RightMouse => m_Wrapper.m_Player_RightMouse;
         public InputAction @Kick => m_Wrapper.m_Player_Kick;
+        public InputAction @Shift => m_Wrapper.m_Player_Shift;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -347,6 +370,9 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
             @Kick.started += instance.OnKick;
             @Kick.performed += instance.OnKick;
             @Kick.canceled += instance.OnKick;
+            @Shift.started += instance.OnShift;
+            @Shift.performed += instance.OnShift;
+            @Shift.canceled += instance.OnShift;
         }
 
         private void UnregisterCallbacks(IPlayerActions instance)
@@ -372,6 +398,9 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
             @Kick.started -= instance.OnKick;
             @Kick.performed -= instance.OnKick;
             @Kick.canceled -= instance.OnKick;
+            @Shift.started -= instance.OnShift;
+            @Shift.performed -= instance.OnShift;
+            @Shift.canceled -= instance.OnShift;
         }
 
         public void RemoveCallbacks(IPlayerActions instance)
@@ -398,5 +427,6 @@ public partial class @PlayerInputAction: IInputActionCollection2, IDisposable
         void OnLeftMouse(InputAction.CallbackContext context);
         void OnRightMouse(InputAction.CallbackContext context);
         void OnKick(InputAction.CallbackContext context);
+        void OnShift(InputAction.CallbackContext context);
     }
 }
