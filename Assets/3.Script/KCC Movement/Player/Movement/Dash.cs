@@ -49,9 +49,11 @@ public class Dash : MonoBehaviour
         _targetTrans = K_WeaponControl.instance.GetClosestTarget();
         if (_targetTrans == null || Player.instance.PlayerCharacter.currentState.Stance == EStance.Slide)
         {
+            Debug.Log("_targetTrans == null || Player.instance.PlayerCharacter.currentState.Stance == EStance.Slide");
             return;
         }
         Physics.Raycast(_targetTrans.position, Vector3.down, out _hit, (!Player.instance.PlayerCharacter.Motor.GroundingStatus.IsStableOnGround) ? 1 : 4);
+        Debug.Log($"!Player.instance.PlayerCharacter.Motor.GroundingStatus.IsStableOnGround : {!Player.instance.PlayerCharacter.Motor.GroundingStatus.IsStableOnGround}");
         if (_hit.distance != 0f)
         {
             _targetPos = _hit.point + Vector3.up;
@@ -102,7 +104,7 @@ public class Dash : MonoBehaviour
                 canDash = true;
                 currentVelocity += _direction * 25f;
 
-                _targetTrans.GetComponentInChildren<K_Dashable>().Dash();
+                _targetTrans.GetComponentInChildren<IK_Dashable>().Dash();
 
                 isDashing = false;
                 _state = EDashState.Idle;

@@ -5,6 +5,8 @@ public class K_WeaponHolder : MonoBehaviour
     public static K_WeaponHolder instance = null;
 
     public Transform currentWeapon;
+    public K_ThrowedWeaponPooling swordPool;
+    public K_ThrowedWeaponPooling bowPool;
 
     private void Awake()
     {

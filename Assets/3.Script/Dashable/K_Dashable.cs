@@ -1,6 +1,4 @@
-using UnityEngine;
-
-public abstract class K_Dashable : MonoBehaviour
-{
-    public abstract void Dash();
+public interface IK_Dashable
+{ 
+    public void Dash();
 }

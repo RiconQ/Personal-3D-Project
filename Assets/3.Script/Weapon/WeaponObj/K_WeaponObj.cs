@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class K_WeaponObj : K_Dashable
+public class K_WeaponObj : MonoBehaviour, IK_Dashable
 {
     public enum EWeapon
     {
@@ -26,7 +26,7 @@ public class K_WeaponObj : K_Dashable
         }
         //if(Player.instance.PlayerCharacter.ignoredCollider.Add())
     }
-    public override void Dash()
+    public void Dash()
     {
         gameObject.SetActive(false);
         switch (weapon)

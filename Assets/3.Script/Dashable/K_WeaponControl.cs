@@ -59,7 +59,7 @@ public class K_WeaponControl : MonoBehaviour
                     {
                         index = i;
                     }
-                    _targetUnreachable = (Player.instance.PlayerCamera.transform.position - allWeapon[i].position).y.Abs() > 2f;
+                    _targetUnreachable = (Player.instance.PlayerCamera.transform.position - allWeapon[i].position).y.Abs() > 4f;
                 }
             }
         }

@@ -215,4 +215,14 @@ public class K_SwordController : K_WeaponController
             }
         }
     }
+
+    public void Throw()
+    {
+        var vector = Player.instance.PlayerCamera.transform.forward;
+        var throwedSword = K_WeaponHolder.instance.swordPool.GetObject();
+
+        //Get Target
+
+        throwedSword.ThrowWeapon(Quaternion.LookRotation(vector));
+    }
 }
