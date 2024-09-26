@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3dc61f8717448a63ae498460283d8b19, type: 3}
+  m_Name: Deadmen Env
+  m_EditorClassIdentifier:
+  postProcess: {fileID: 1146328381824166, guid: 1747c258d3ebda64195ad3b8cff0a307, type: 2}
+  Reflections: {fileID: 8900000, guid: 65dee49fa90e62242820678bb2f43585, type: 3}
+  Skybox: {fileID: 11400000, guid: dd6ce8734c39fa84895973d295e73e91, type: 2}
+  Enviroment: {fileID: 11400000, guid: fff5eb78976608a41a94150221ba7cee, type: 2}
+  Fog: {fileID: 11400000, guid: f3a74b23c42de474f8945e8162467555, type: 2}
+  Ambient: {fileID: 11400000, guid: 5eeaabb41aaffe34d9eddf451c3593e6, type: 2}
+  lighting: {fileID: 850595691, guid: 8a13b0deb25d03541834d39be3330eef, type: 2}

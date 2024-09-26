@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d7e916d176ebfcc321928a85528887f, type: 3}
+  m_Name: BodySounds
+  m_EditorClassIdentifier:
+  implied: {fileID: 8300000, guid: 06cf5771f309ba74db89ec833da8c136, type: 3}
+  dash: {fileID: 8300000, guid: a1a5e1b970eb1974f807f0831c925894, type: 3}
+  impacts:
+  - {fileID: 8300000, guid: ece0c1c2403eebe4e88c6c84266819c6, type: 3}
+  - {fileID: 8300000, guid: 13d6349c95585b54c903bad3c5c7cc52, type: 3}
+  - {fileID: 8300000, guid: 768aa1382ae8ca0479933f745d9d20eb, type: 3}
+  kick:
+  - {fileID: 8300000, guid: 4285b353b9a154d4ab1f40b0f4b4daea, type: 3}
+  - {fileID: 8300000, guid: 5068ba607f1b01b44ba05ad426e357ea, type: 3}
+  - {fileID: 8300000, guid: f096e6435d336934e94b47ea6b96e1db, type: 3}

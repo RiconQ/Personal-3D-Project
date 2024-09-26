@@ -88,9 +88,7 @@ public class PullableControl : MonoBehaviour
 		}
 		foreach (Transform pullable in pullables)
 		{
-			if (!pullable.gameObject.activeInHierarchy || 
-				pullable.position.y - Game.player.t.position.y < 0f || 
-				Vector3.Dot(Game.player.tHead.forward, Game.player.tHead.position.DirTo(pullable.position)) < 0f)
+			if (!pullable.gameObject.activeInHierarchy || pullable.position.y - Game.player.t.position.y < 0f || Vector3.Dot(Game.player.tHead.forward, Game.player.tHead.position.DirTo(pullable.position)) < 0f)
 			{
 				continue;
 			}

@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8f5746792cd33c620469e4df60b04a6, type: 3}
+  m_Name: 0 Tutorial Area
+  m_EditorClassIdentifier:
+  thumbnail: {fileID: 21300000, guid: f191718560cc5fe4d8489391c72e018d, type: 2}
+  levels:
+  - {fileID: 11400000, guid: f65db61136346bc4eb6cf6ce7185ded6, type: 2}
+  - {fileID: 11400000, guid: 8e3c68a713018764cb72aad09c18f0ee, type: 2}
+  - {fileID: 11400000, guid: bb823d6ec17556e4c961cd2d08911d53, type: 2}
+  - {fileID: 11400000, guid: 5576a762ca384e845a67cd47f1339b60, type: 2}
+  - {fileID: 11400000, guid: c3899e1b15ecb044b9cd67e8fa0c5065, type: 2}
+  - {fileID: 11400000, guid: 667eb1726bda79c42b9a63d63a3add58, type: 2}
+  envPreset: {fileID: 11400000, guid: 577c934d55492da45897aea37dc3b690, type: 2}
+  AmbientMusic: {fileID: 8300000, guid: 785566fbdedc2d04a95f6fa914f22eb5, type: 3}
+  MusicSet: {fileID: 11400000, guid: b969b0bff3d49c341904caaeeae9bef6, type: 2}

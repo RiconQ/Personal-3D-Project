@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -2099961501, guid: e161fae64b898bc22624d03ed611378f, type: 3}
+  m_Name: Post Effects
+  m_EditorClassIdentifier:
+  settings:
+  - {fileID: 11400000, guid: 1b8efe40afc9d6840b5936f50a63a57b, type: 2}
+  - {fileID: 11400000, guid: de9a607195fbe3b4fbe957d47908ba14, type: 2}
+  - {fileID: 11400000, guid: 5664e92815bb84e46bc252222ac3be2e, type: 2}
+  - {fileID: 11400000, guid: fa83f814b928907489e94631323c2d3d, type: 2}
+  - {fileID: 11400000, guid: 198ade1441d26ef4c9b43d68d507f7fa, type: 2}

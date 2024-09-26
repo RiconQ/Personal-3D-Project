@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 442e8714d9d4126e9f30f0c389883fb8, type: 3}
+  m_Name: Nexus
+  m_EditorClassIdentifier:
+  sceneReference:
+    scenePath: Assets/Scenes/Hubs/nexus.unity
+  area: {fileID: 11400000, guid: adc4a3bf38e619345a6122ba23a788ad, type: 2}
+  publicName: Nexus
+  testLevel: 0
+  sceneType: 1
+  results:
+    name:
+    noDanage: 0
+    noFalls: 0
+    noMercy: 0
+    rank: 0
+    points: 0
+    combo: 0
+    time: 0
+    secret: 0
+    reached: 0
+  lockedBy: []

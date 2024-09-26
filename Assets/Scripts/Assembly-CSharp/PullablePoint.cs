@@ -10,7 +10,7 @@ public class PullablePoint : MonoBehaviour, IDamageable<DamageData>
 	public PullableTarget target;
 
 	public bool horizontal;
-		
+
 	private Transform t;
 
 	public void Awake()

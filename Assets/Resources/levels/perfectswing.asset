@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 442e8714d9d4126e9f30f0c389883fb8, type: 3}
+  m_Name: perfectswing
+  m_EditorClassIdentifier:
+  sceneReference:
+    scenePath: Assets/Scenes/Levels/perfect swing.unity
+  area: {fileID: 11400000, guid: 9c2d43768be269842bf5afc4c713360a, type: 2}
+  publicName: Perfect Swing
+  testLevel: 0
+  sceneType: 3
+  results:
+    name:
+    noDanage: 0
+    noFalls: 0
+    noMercy: 0
+    rank: 0
+    points: 0
+    combo: 0
+    time: 0
+    secret: 0
+    reached: 0
+  lockedBy: []

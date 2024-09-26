@@ -266,10 +266,7 @@ public class SwordController : WeaponController
 			{
 				vector = CrowdControl.instance.GetClosestDirectionToNormal(player.tHead.position, vector, 7.5f);
 			}
-			(QuickPool.instance.Get(
-				data.prefabThrowed, 
-				player.tHead.position, 
-				Quaternion.LookRotation(vector)) as ThrowedWeapon).dmg.amount = 80 + ((!Game.player.grounder.grounded) ? 20 : 0) + Game.player.parkourActionsCount * 20;
+			(QuickPool.instance.Get(data.prefabThrowed, player.tHead.position, Quaternion.LookRotation(vector)) as ThrowedWeapon).dmg.amount = 80 + ((!Game.player.grounder.grounded) ? 20 : 0) + Game.player.parkourActionsCount * 20;
 			objWeapon.SetActive(value: false);
 			break;
 		}

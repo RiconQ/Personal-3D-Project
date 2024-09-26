@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 442e8714d9d4126e9f30f0c389883fb8, type: 3}
+  m_Name: h2l4
+  m_EditorClassIdentifier:
+  sceneReference:
+    scenePath: Assets/Scenes/Levels/rope-swinging.unity
+  area: {fileID: 11400000, guid: b28a4f92044bbba4d983df65bebe5af8, type: 2}
+  publicName: Rope Swinging
+  testLevel: 0
+  sceneType: 3
+  results:
+    name: rope-swinging
+    noDanage: 0
+    noFalls: 0
+    noMercy: 0
+    rank: 3
+    points: 0
+    combo: 0
+    time: 99.99
+    secret: 0
+    reached: 1
+  lockedBy:
+  - {fileID: 11400000, guid: e7c4875909422204da57f4a6b051b39f, type: 2}

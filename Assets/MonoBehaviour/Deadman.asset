@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 379686ac7d98e36c86a8f2930cbae709, type: 3}
+  m_Name: Deadman
+  m_EditorClassIdentifier:
+  Spawn: {fileID: 8300000, guid: 7df5e63cfeebfd94fb63ff067c57ddf1, type: 3}
+  Die: {fileID: 8300000, guid: b1edd01773332304f8b621edc30ae5c4, type: 3}
+  Hurt: {fileID: 8300000, guid: 84a526f30d8ea1146b023602b26aac8a, type: 3}
+  Attack: {fileID: 8300000, guid: 9d63781d893055143b170ccb8bac1b2f, type: 3}
+  AltAttack: {fileID: 8300000, guid: 294ab8fe2c20cbc45a7167d74f310758, type: 3}
+  Hit: {fileID: 8300000, guid: fb7a40d7c24bd9344b7ab3d3a24f0f12, type: 3}
+  Fall: {fileID: 8300000, guid: e6051ebdd866a7040a339a1d0e971571, type: 3}
+  Dash: {fileID: 8300000, guid: 6d03ba88bf7774b479a849ac569be6f3, type: 3}

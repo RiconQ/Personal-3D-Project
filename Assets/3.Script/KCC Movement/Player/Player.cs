@@ -61,7 +61,6 @@ public class Player : MonoBehaviour
         _playerCharacter.Initialize();
         _jump.Initialize();
         _sliding.Initialize();
-        _ledgeClimb.Initialize();
         _objectThrow.Initialize();
         _dash.Initialize();
 
@@ -113,7 +112,7 @@ public class Player : MonoBehaviour
         {
             Rotation            = _playerCamera.transform.rotation,
             Move                = input.Move.ReadValue<Vector2>(),
-            Jump                = input.Jump.WasPressedThisFrame(),
+            Jump                = input.Jump.IsPressed(),
             Crouch              = input.Crouch.WasPressedThisFrame() ?
                                     ECrouchInput.Toggle : ECrouchInput.None,
             LeftMouse           = input.LeftMouse.WasPressedThisFrame(),
@@ -138,7 +137,6 @@ public class Player : MonoBehaviour
             Crouch              = input.Crouch.WasPressedThisFrame(),
         };
 
-        _ledgeClimb.UpdateLedgeClimb();
 
         _playerCharacter.UpdateInput(characterInput, _inputAction.Player.Move.ReadValue<Vector2>());
 

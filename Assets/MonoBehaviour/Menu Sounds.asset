@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fc3ca70d08352b90c9f6879e3e1194f, type: 3}
+  m_Name: Menu Sounds
+  m_EditorClassIdentifier:
+  accept: {fileID: 8300000, guid: 8262e178d4be08e4f936f78f617be281, type: 3}
+  back: {fileID: 8300000, guid: 03ec14d32e3a637448294db4b3f00461, type: 3}
+  next: {fileID: 8300000, guid: f8f7b3dda262d9041afb695bb51b16b4, type: 3}
+  nextItem: {fileID: 8300000, guid: ff031258f7f059e4b9c900ef053be77f, type: 3}

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca97c157838470761cd527c10c902358, type: 3}
+  m_Name: Tension Layers
+  m_EditorClassIdentifier:
+  audioClips:
+  - {fileID: 8300000, guid: b66074aa47e45c347ad73330c34f2249, type: 3}
+  - {fileID: 8300000, guid: 878a07db2bc370e4594c1a78e69e674b, type: 3}
+  - {fileID: 8300000, guid: b32877d7c1f7d754db8f9adf8a4a1f76, type: 3}
+  partSet: 0

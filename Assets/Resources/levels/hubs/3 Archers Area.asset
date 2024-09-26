@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8f5746792cd33c620469e4df60b04a6, type: 3}
+  m_Name: 3 Archers Area
+  m_EditorClassIdentifier:
+  thumbnail: {fileID: 21300000, guid: b7baa1227d50c7044bc9bdbd904b4af8, type: 2}
+  levels:
+  - {fileID: 11400000, guid: f6e6bf59d50462e42b8bb08179b11d8a, type: 2}
+  - {fileID: 11400000, guid: 3f76efacadfac3943b28d4d70a9f02c7, type: 2}
+  - {fileID: 11400000, guid: 5f312ac69532e894cae1b89e4cd668bf, type: 2}
+  - {fileID: 11400000, guid: ae0e5c32a6bf34c4096214b08f5352e5, type: 2}
+  - {fileID: 11400000, guid: 7c07874dc1153ab4ca55cbc78f67c38d, type: 2}
+  - {fileID: 11400000, guid: 8c7cc634daae94942a6afeef44f930da, type: 2}
+  - {fileID: 11400000, guid: 551f0d326f725c840bc70a3a5fe8e35f, type: 2}
+  - {fileID: 11400000, guid: 17ce63e81a83a674baa1c96fa116be99, type: 2}
+  - {fileID: 11400000, guid: d649c5716c8619e45a100135e0379c19, type: 2}
+  - {fileID: 11400000, guid: 50bcb6ad5e60a0041ae6d06efd392ab6, type: 2}
+  envPreset: {fileID: 11400000, guid: a8d16a4d8250eeb4eb57c7a38c2e9ca8, type: 2}
+  AmbientMusic: {fileID: 8300000, guid: d1a9bba0b00c2024e9473a0a27fbe0e5, type: 3}
+  MusicSet: {fileID: 11400000, guid: da12a2a20acc2f94ca08fe14ec747fbb, type: 2}

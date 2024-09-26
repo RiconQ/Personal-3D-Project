@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca97c157838470761cd527c10c902358, type: 3}
+  m_Name: Stealth Layers
+  m_EditorClassIdentifier:
+  audioClips:
+  - {fileID: 8300000, guid: c914fd80bc6906046938430c41547a3e, type: 3}
+  - {fileID: 8300000, guid: 8b05abb0e2c5cdc4f9201bb30337e4f2, type: 3}
+  - {fileID: 8300000, guid: be137dc539facca438db1571c39574b4, type: 3}
+  partSet: 0

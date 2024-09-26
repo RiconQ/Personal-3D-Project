@@ -128,8 +128,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     #endregion Code Variables
 
-    [Header("Debug")]
-    public TMP_Text debugText;
 
     #endregion Variables
 
@@ -155,19 +153,6 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         _dash = GetComponent<Dash>();
     }
 
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Slash))
-            debugText.gameObject.SetActive(!debugText.gameObject.activeSelf);
-        //Debug
-        string debugLog =
-            $"Stance : {currentState.Stance.ToString()}\n" +
-            $"Grounded : {currentState.Grounded}\n" +
-            $"Velocity : {_motor.Velocity.magnitude}\n" +
-            $"FOV : {Camera.main.fieldOfView}\n";
-
-        debugText.text = $"{debugLog}";
-    }
 
     private void LateUpdate()
     {
@@ -321,8 +306,9 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             _isPulling = false;
         }
 
-        if (_ledgeClimb.IsLedgeClimbing == true)
+        if (_ledgeClimb.isClimbing)
         {
+            _ledgeClimb.ClimbUpdate(ref currentVelocity, deltaTime);
             return;
         }
 
@@ -494,13 +480,13 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
                     _jump.JumpMovement(ref currentVelocity);
                 }
             }
-            else if (!grounded && _ledgeClimb.IsInLedge && !_ledgeClimb.IsLedgeClimbing)
+            else if (!grounded && !_ledgeClimb.isClimbing)
             {
                 requestedInput.Jump = false;     //Unset jump request
                 requestedInput.Crouch = false;   // and request the character uncrouch
                 requestedInput.CrouchInAir = false;
 
-                _ledgeClimb.StartLedgeClimb();
+                _ledgeClimb.TryClimb();
             }
             else
             {
