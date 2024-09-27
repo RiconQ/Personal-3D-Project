@@ -76,6 +76,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
     private LedgeClimb _ledgeClimb;
     private ObjectThrow _objectThrow;
     private Dash _dash;
+    private K_Jumper _jumper;
 
     [Space]
     [Header("Movement")]
@@ -151,6 +152,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         _ledgeClimb = GetComponent<LedgeClimb>();
         _objectThrow = GetComponent<ObjectThrow>();
         _dash = GetComponent<Dash>();
+        _jumper = GetComponent<K_Jumper>();
     }
 
 
@@ -304,11 +306,18 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
         {
             currentVelocity = _pullingVelocity;
             _isPulling = false;
+            return;
         }
 
         if (_ledgeClimb.isClimbing)
         {
             _ledgeClimb.ClimbUpdate(ref currentVelocity, deltaTime);
+            return;
+        }
+
+        if (_jumper.isJumping)
+        {
+            _jumper.Jumping(ref currentVelocity, deltaTime);
             return;
         }
 
@@ -645,6 +654,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
 
     public void PullTo(Vector3 targetPos, bool withPound = false)
     {
+        Debug.Log($"Target Pos : {targetPos}");
         _isPulling = true;
         _pullingVelocity = Vector3.zero;
         float num = _playerCamera.transform.position.y - targetPos.y;
@@ -659,7 +669,7 @@ public class PlayerCharacter : MonoBehaviour, ICharacterController
             _motor.ForceUnground(time: 0f);
         }
 
-        _pullingVelocity = (transform.position.DirTo(targetPos) + Vector3.up).normalized * Mathf.Lerp(36f, 12f, Mathf.Clamp01(num / 6f));
+        _pullingVelocity = (transform.position.DirTo(targetPos) + (Vector3.up*1.5f)).normalized * Mathf.Lerp(36f, 12f, Mathf.Clamp01(num / 6f));
     }
 
     public void PullInDir(Vector3 targetPos)

@@ -6,6 +6,13 @@ TagManager:
   tags:
   - Wall
   - Danger
+  - Wood
+  - Target
+  - Pullable
+  - Secret
+  - Enemy
+  - Metal
+  - Stairs
   layers:
   - Default
   - TransparentFX
@@ -19,7 +26,7 @@ TagManager:
   - IsLedge
   - IsThrowable
   - Weapon
-  - 
+  - Damageable
   - 
   - 
   - 

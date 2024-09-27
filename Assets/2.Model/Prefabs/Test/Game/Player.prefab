@@ -4967,6 +4967,7 @@ GameObject:
   - component: {fileID: 2896643434180668284}
   - component: {fileID: 8765692316185289568}
   - component: {fileID: 3718837505148747653}
+  - component: {fileID: 7661363084307088394}
   m_Layer: 6
   m_Name: Character
   m_TagString: Untagged
@@ -5090,7 +5091,6 @@ MonoBehaviour:
   _crouchCameraTargetHeight: 0.7
   exitWallTimer: 0
   ignoredCollider: []
-  debugText: {fileID: 0}
 --- !u!114 &5708095528777804572
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5206,6 +5206,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _speed: 30
   _state: 0
+--- !u!114 &7661363084307088394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 513742229609789502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 000b51be13aba8b419f1f41034789279, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &804479889679701030
 GameObject:
   m_ObjectHideFlags: 0
@@ -5562,6 +5574,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7177473762250772416}
   - component: {fileID: 8471388622931093974}
+  - component: {fileID: 5665548385141883699}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -5608,6 +5621,20 @@ MonoBehaviour:
   _stanceVignette: {fileID: 2587996746361298213}
   _chromaticAberrationEffect: {fileID: 7418225501695161581}
   _weaponHolder: {fileID: 5767948566660690684}
+--- !u!114 &5665548385141883699
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1915719809119510195}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2511d2dec9b028b45801a91f5dd12a3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerHealth: 3
+  isDead: 0
 --- !u!1 &2117688795746809602
 GameObject:
   m_ObjectHideFlags: 0

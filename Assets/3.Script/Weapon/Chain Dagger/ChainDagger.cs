@@ -133,13 +133,18 @@ public class ChainDagger : MonoBehaviour
         _collider.enabled = false;
         hoockedCol = other;
 
-        if (other.gameObject.layer == 8)
+        if (other.gameObject.layer == 8) // Pullable Hoock
         {
             if (OnHit != null)
             {
                 OnHit(hoockedCol.gameObject);
             }
             return;
+        }
+        else if(other.gameObject.layer == 12) //Damageable
+        {
+            other.GetComponent<K_IDamageable>().Damage();
+            Stop();
         }
         else
         {
