@@ -10840,7 +10840,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4023
+    m_Bits: 8119
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -11809,7 +11809,7 @@ MonoBehaviour:
   _normalConeAngle: 80
   _attackable:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 4096
   _circleRayDistance: 5
   _numberOfRaycastPerCircle: 30
   _cylinderRadius: 5

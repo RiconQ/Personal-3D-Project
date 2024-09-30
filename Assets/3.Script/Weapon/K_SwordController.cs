@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.ProBuilder.Shapes;
+using static Unity.Burst.Intrinsics.X86.Avx;
 
 public class K_SwordController : K_WeaponController
 {
@@ -160,13 +161,15 @@ public class K_SwordController : K_WeaponController
             if (Physics.Raycast(ray, out hit, _normalRayDistance, _attackable))
             {
                 Debug.DrawRay(origin, rayDirection * _normalRayDistance, Color.red, 1f);
+                if (hit.transform.TryGetComponent<K_IDamageable>(out var tmp))
+                    tmp.Damage();
                 //Debug.Log("Attack");
             }
             else
             {
                 //Debug.Log("False Attack");
                 Debug.DrawRay(origin, rayDirection * _normalRayDistance, Color.green, 1f);
-            }    
+            }
         }
     }
     public void FallingAttackRaycast()
@@ -208,6 +211,8 @@ public class K_SwordController : K_WeaponController
             {
                 Debug.DrawRay(center, rayDirection.normalized * _circleRayDistance, Color.red, 1f);
                 //Debug.Log("Hit");
+                if (hit.transform.TryGetComponent<K_IDamageable>(out var tmp))
+                    tmp.Damage();
             }
             else
             {

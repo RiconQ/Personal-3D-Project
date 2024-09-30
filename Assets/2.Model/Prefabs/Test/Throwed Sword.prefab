@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8537139994265551145}
   - component: {fileID: 3632201305325140895}
   - component: {fileID: 2395689493278636808}
+  - component: {fileID: 4730915978190415229}
   m_Layer: 2
   m_Name: Throwed Sword
   m_TagString: Untagged
@@ -74,6 +75,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _meshTrans: {fileID: 8910649980310827411}
+--- !u!65 &4730915978190415229
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 823406400958205384}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.160878, y: 2.732973, z: 0.2022224}
+  m_Center: {x: -0.0033036172, y: 0.36433458, z: -0.0052485913}
 --- !u!1 &6950702863506766305
 GameObject:
   m_ObjectHideFlags: 0
@@ -166,7 +188,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2228191624965054907}
-  - component: {fileID: 4515277633246058267}
   m_Layer: 2
   m_Name: Mesh
   m_TagString: Untagged
@@ -190,26 +211,3 @@ Transform:
   - {fileID: 8910649980310827411}
   m_Father: {fileID: 8537139994265551145}
   m_LocalEulerAnglesHint: {x: 0, y: -0, z: -0}
---- !u!136 &4515277633246058267
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7700521086012201115}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.25
-  m_Height: 1.5
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}

@@ -55,5 +55,10 @@ public class Arrow : MonoBehaviour
 
         //Make sure projectile moves with target
         transform.SetParent(other.transform);
+        if (other.transform.TryGetComponent<K_IDamageable>(out var tmp))
+        {
+            tmp.Damage();
+        }
     }
+
 }

@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 2731785380415368875}
   - component: {fileID: 4419033592393027707}
   - component: {fileID: 5340934271462917810}
-  - component: {fileID: 3106890315227970158}
   m_Layer: 0
   m_Name: Mesh
   m_TagString: Untagged
@@ -84,27 +83,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &3106890315227970158
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1069658720635343355}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 2112
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.080614954, y: 0.1291152, z: 0.37059957}
-  m_Center: {x: 0.0007697493, y: 0.00056937337, z: 0.65470016}
 --- !u!1 &5888244180323782537
 GameObject:
   m_ObjectHideFlags: 0
@@ -116,6 +94,7 @@ GameObject:
   - component: {fileID: 7733594916931240642}
   - component: {fileID: 3196540340673015557}
   - component: {fileID: 4443021814251291923}
+  - component: {fileID: 1626129703775173227}
   m_Layer: 0
   m_Name: Arrow
   m_TagString: Untagged
@@ -182,3 +161,24 @@ MonoBehaviour:
   _shootForce: 120
   _shootUpwardForce: 0
   _maxDistance: 500
+--- !u!65 &1626129703775173227
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5888244180323782537}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.15122262, y: 0.1576938, z: 1.5938084}
+  m_Center: {x: 0.0050322264, y: 0.00826779, z: -0.15600061}

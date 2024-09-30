@@ -59,4 +59,10 @@ public class K_ThrowedWeapon : MonoBehaviour
 
         K_WeaponHolder.instance.swordPool.Return(this);
     }
+    
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.transform.TryGetComponent<K_IDamageable>(out var tmp))
+            tmp.Damage();
+    }
 }

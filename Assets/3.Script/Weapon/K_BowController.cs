@@ -97,4 +97,14 @@ public class K_BowController : K_WeaponController
     {
         ResetShoot();
     }
+
+    public void Throw()
+    {
+        var vector = Player.instance.PlayerCamera.transform.forward;
+        var throwedSword = K_WeaponHolder.instance.bowPool.GetObject();
+
+        //Get Target
+
+        throwedSword.ThrowWeapon(Quaternion.LookRotation(vector));
+    }
 }
