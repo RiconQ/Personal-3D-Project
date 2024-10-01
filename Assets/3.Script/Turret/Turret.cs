@@ -3,12 +3,11 @@ using UnityEngine;
 public class Turret : MonoBehaviour, K_IDamageable
 {
     public Transform bodyTransform;
-    public Transform tempTransfomr;
     public Transform playerTransform;
+    public Transform shootingTrans;
 
-    public float rotationSpeed = 5f;
-    public float shootDuration = 1f; 
-
+    public float rotationSpeed = 10f;
+    public float shootDuration = 0.05f;
 
     public float range = 20f;
 
@@ -21,11 +20,9 @@ public class Turret : MonoBehaviour, K_IDamageable
 
     private void Update()
     {
-        var start = new Vector3(tempTransfomr.position.x, 1, tempTransfomr.position.z);
-        Debug.DrawRay(start, tempTransfomr.forward * 20);
         if (Vector3.Distance(bodyTransform.position, playerTransform.position) <= range)
         {
-            RotateBody(); 
+            bodyTransform.LookAt(playerTransform.position);
             if(shootTimer <= 0)
             {
                 Shoot();
@@ -41,20 +38,10 @@ public class Turret : MonoBehaviour, K_IDamageable
     {
         //shoot fx
         Debug.Log("Shoot");
-
-        var start = new Vector3(tempTransfomr.position.x, 1, tempTransfomr.position.z);
-        Ray ray = new Ray(start, tempTransfomr.forward);
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit, 20f))
-        {
-            Debug.Log("hit" + hit.transform.gameObject.name);
-            if (hit.collider.gameObject.layer == 6)
-            {
-                Debug.Log("Player Hit");
-            }
-        }
         shootTimer = shootDuration;
+        var bullet = BulletPooling.GetObj();
+        bullet.transform.position = shootingTrans.position;
+        bullet.transform.rotation = shootingTrans.rotation;
     }
 
     private void RotateBody()
@@ -66,7 +53,6 @@ public class Turret : MonoBehaviour, K_IDamageable
         {
             var targetRotation = Quaternion.LookRotation(direction);
             bodyTransform.rotation = Quaternion.Slerp(bodyTransform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-            tempTransfomr.rotation = Quaternion.Slerp(bodyTransform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
     }
 
