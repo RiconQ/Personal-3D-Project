@@ -266,11 +266,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bodyTransform: {fileID: 4044414693784811448}
-  playerTransform: {fileID: 0}
   shootingTrans: {fileID: 3587376767457053793}
   rotationSpeed: 3.4
-  shootDuration: 0.04
-  range: 20
+  shootDuration: 0.1
+  rangeCol: {fileID: 3625391441981835135}
 --- !u!65 &2301945723018259071
 BoxCollider:
   m_ObjectHideFlags: 0

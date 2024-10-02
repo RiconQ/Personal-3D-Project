@@ -1,9 +1,11 @@
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class K_KickController : K_WeaponController
 {
     public static K_KickController instance = null;
     public bool kickCharging { get; private set; }
+
 
     private void Awake()
     {
@@ -76,6 +78,7 @@ public class K_KickController : K_WeaponController
     public override void Release()
     {
         kickCharging = false;
+        KickRay();
         _animator.Play("Kick Released", -1, 0f);
         var currentWeapon = K_WeaponHolder.instance.GetCurrentWeapon();
         if (currentWeapon != -1)
@@ -104,6 +107,19 @@ public class K_KickController : K_WeaponController
         if (K_WeaponHolder.instance.GetCurrentWeapon() != -1)
         {
             K_WeaponHolder.instance.weaponArray[K_WeaponHolder.instance.GetCurrentWeapon()].ResetVar();
+        }
+    }
+
+    public void KickRay()
+    {
+        RaycastHit hit;
+        if(Physics.Raycast(Player.instance.PlayerCamera.transform.position, Player.instance.PlayerCamera.transform.forward, out hit, 5f))
+        {
+            Debug.Log(hit.transform.gameObject.name);
+            if(hit.transform.TryGetComponent<K_IDamageable>(out var tmp) && hit.transform.gameObject.layer != 6)
+            {
+                tmp.Damage();
+            }
         }
     }
 }

@@ -42,6 +42,8 @@ public class Player : MonoBehaviour
     [SerializeField]private K_WeaponHolder _weaponHolder;
     public K_WeaponHolder WeaponHolder => _weaponHolder;
 
+    public Build_Pause pause;
+
     private void Awake()
     {
         instance = this;
@@ -53,6 +55,7 @@ public class Player : MonoBehaviour
 
         _inputAction = new PlayerInputAction();
         _inputAction.Enable();
+
 
         //GetComponent
         GetMovementComponent();
@@ -99,6 +102,11 @@ public class Player : MonoBehaviour
     private void Update()
     {
         //Debug.Log(_inputAction.Player.Move.ReadValue<Vector2>());
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            pause.PauseGame();
+        }
 
         var input = _inputAction.Player;
         var deltaTime = Time.deltaTime;

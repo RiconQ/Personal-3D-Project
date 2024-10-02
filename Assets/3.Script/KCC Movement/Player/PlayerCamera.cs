@@ -25,8 +25,11 @@ public class PlayerCamera : MonoBehaviour
         _mainCamera = Camera.main;
     }
 
+    public bool isPause = false;
+
     public void UpdateRotation(CameraInput input)
     {
+        if (isPause) return;
         _eulerAngles += new Vector3(-input.Look.y, input.Look.x) * _sensitivity;
         //debug
         _eulerAngles.x = Mathf.Clamp(_eulerAngles.x, -89, 89);

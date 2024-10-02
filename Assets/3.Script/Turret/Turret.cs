@@ -3,19 +3,22 @@ using UnityEngine;
 public class Turret : MonoBehaviour, K_IDamageable
 {
     public Transform bodyTransform;
-    public Transform playerTransform;
+    private Transform playerTransform;
     public Transform shootingTrans;
 
     public float rotationSpeed = 10f;
     public float shootDuration = 0.05f;
 
-    public float range = 20f;
+    public SphereCollider rangeCol;
+
+    private float range;
 
     private float shootTimer;
 
     private void Start()
     {
         playerTransform = Player.instance.PlayerCharacter.transform;
+        range = rangeCol.radius;
     }
 
     private void Update()

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class PauseMenu : MonoBehaviour
+public class Kim_PauseMenu : MonoBehaviour
 {
 	private CanvasGroup cg;
 
