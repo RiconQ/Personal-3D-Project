@@ -1,9 +1,19 @@
 using UnityEngine;
 
-public class K_BowController : K_WeaponController
+[RequireComponent(typeof(AudioSource))]
+public class K_BowController : K_WeaponController, K_SoundManager
 {
     private bool _canShoot = true;
 
+    private AudioSource ad;
+    [Header("Sound")]
+    public AudioClip shoot;
+    public AudioClip pickup;
+    public AudioClip charge;
+    private void Start()
+    {
+        ad = GetComponent<AudioSource>();
+    }
     public override void Initialize()
     {
         base.Initialize();
@@ -33,6 +43,7 @@ public class K_BowController : K_WeaponController
                 _lastInput = EInput.RightMouse;
                 _animator.SetTrigger("Charge");
                 _animator.SetInteger("AttackIndex", 3);
+                Play(charge);
                 Charge();
             }
             else if (_requestedInput.LeftMouse && _canShoot)
@@ -41,6 +52,7 @@ public class K_BowController : K_WeaponController
                 _canShoot = false;
                 _animator.SetTrigger("Charge");
                 _animator.SetInteger("AttackIndex", 0);
+                Play(charge);
                 Charge();
             }
         }
@@ -55,6 +67,7 @@ public class K_BowController : K_WeaponController
             else if (_requestedInput.LeftMouseReleased && _lastInput == EInput.LeftMouse)
             {
                 _lastInput = EInput.LeftMouseReleased;
+                Play(shoot);
                 _animator.SetTrigger("Release");
                 Release();
             }
@@ -86,6 +99,7 @@ public class K_BowController : K_WeaponController
     private void OnEnable()
     {
         ResetVar();
+        //Play(pickup);
     }
 
     public void ResetShoot()
@@ -106,5 +120,10 @@ public class K_BowController : K_WeaponController
         //Get Target
 
         throwedSword.ThrowWeapon(Quaternion.LookRotation(vector));
+    }
+
+    public void Play(AudioClip clip)
+    {
+        ad.PlayOneShot(clip);
     }
 }

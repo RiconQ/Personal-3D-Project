@@ -1,9 +1,15 @@
 using UnityEngine;
-using UnityEngine.ProBuilder.Shapes;
-using static Unity.Burst.Intrinsics.X86.Avx;
 
-public class K_SwordController : K_WeaponController
+[RequireComponent(typeof(AudioSource))]
+public class K_SwordController : K_WeaponController, K_SoundManager
 {
+    private AudioSource ad;
+
+    [Header("Sound")]
+    public AudioClip slash;
+    public AudioClip pickup;
+    public AudioClip charge;
+
     private int _slashIndex = 0;
     private bool _isAttacking = false;
     private PlayerCharacter _pm;
@@ -33,6 +39,7 @@ public class K_SwordController : K_WeaponController
         base.Initialize();
         _pm = FindObjectOfType<PlayerCharacter>();
         this.gameObject.SetActive(false);
+        ad = GetComponent<AudioSource>();
     }
 
     public override void UpdateController(float deltaTime)
@@ -60,6 +67,7 @@ public class K_SwordController : K_WeaponController
                 _lastInput = EInput.RightMouse;
                 _animator.SetInteger("AttackIndex", 3);
                 _animator.SetTrigger("Charge");
+                Play(charge);
                 Charge();
             }
             else if (_requestedInput.LeftMouse && !_isAttacking && _pm.Motor.GroundingStatus.IsStableOnGround)
@@ -70,6 +78,7 @@ public class K_SwordController : K_WeaponController
                 _slashIndex %= 2;
                 _animator.SetInteger("AttackIndex", _slashIndex);
                 _animator.SetTrigger("Charge");
+                Play(charge);
                 Charge();
             }
             else if (_requestedInput.LeftMouse && !_isAttacking && !_pm.Motor.GroundingStatus.IsStableOnGround)
@@ -80,6 +89,7 @@ public class K_SwordController : K_WeaponController
 
                 _animator.SetInteger("AttackIndex", 5);
                 _animator.SetTrigger("Charge");
+                Play(charge);
                 Charge();
             }
         }
@@ -95,6 +105,7 @@ public class K_SwordController : K_WeaponController
             {
                 _lastInput = EInput.LeftMouseReleased;
                 _animator.SetTrigger("Release");
+                Play(slash);
                 Release();
             }
         }
@@ -104,6 +115,7 @@ public class K_SwordController : K_WeaponController
     {
         PlayAnimation("PickUp");
         ResetVar();
+        //Play(pickup);
         _slashIndex = 0;
     }
 
@@ -229,5 +241,10 @@ public class K_SwordController : K_WeaponController
         //Get Target
 
         throwedSword.ThrowWeapon(Quaternion.LookRotation(vector));
+    }
+
+    public void Play(AudioClip clip)
+    {
+        ad.PlayOneShot(clip);
     }
 }

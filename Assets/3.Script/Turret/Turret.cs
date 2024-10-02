@@ -1,7 +1,10 @@
 using UnityEngine;
 
-public class Turret : MonoBehaviour, K_IDamageable
+[RequireComponent (typeof(AudioSource))]
+public class Turret : MonoBehaviour, K_IDamageable, K_SoundManager
 {
+    private AudioSource ad;
+
     public Transform bodyTransform;
     private Transform playerTransform;
     public Transform shootingTrans;
@@ -14,11 +17,15 @@ public class Turret : MonoBehaviour, K_IDamageable
     private float range;
 
     private float shootTimer;
+    [Header("Sound")]
+    public AudioClip shoot;
+    public AudioClip dead;
 
     private void Start()
     {
         playerTransform = Player.instance.PlayerCharacter.transform;
         range = rangeCol.radius;
+        ad = GetComponent<AudioSource>();
     }
 
     private void Update()
@@ -28,6 +35,7 @@ public class Turret : MonoBehaviour, K_IDamageable
             bodyTransform.LookAt(playerTransform.position);
             if(shootTimer <= 0)
             {
+                Play(shoot);
                 Shoot();
             }
             else
@@ -61,6 +69,12 @@ public class Turret : MonoBehaviour, K_IDamageable
 
     public void Damage()
     {
+        Play(dead);
         Destroy(gameObject);
+    }
+
+    public void Play(AudioClip clip)
+    {
+        ad.PlayOneShot(clip);
     }
 }

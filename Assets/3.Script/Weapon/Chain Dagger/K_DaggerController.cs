@@ -1,7 +1,7 @@
 using System.Threading;
 using UnityEngine;
 
-public class K_DaggerController : MonoBehaviour
+public class K_DaggerController : MonoBehaviour, K_SoundManager
 {
     public static K_DaggerController instance;
     public enum EDaggerState
@@ -11,6 +11,12 @@ public class K_DaggerController : MonoBehaviour
         Return
     }
 
+    private AudioSource ad;
+    [Header("Sound")]
+    public AudioClip throwDagger;
+    public AudioClip pull;
+    public AudioClip click;
+    
     [Header("Reference")]
     [SerializeField] private LineRenderer _lr;
     [SerializeField] private Transform _pivot;
@@ -46,6 +52,7 @@ public class K_DaggerController : MonoBehaviour
         dagger.gameObject.SetActive(false);
 
         daggerState = EDaggerState.Idle;
+        ad = GetComponent<AudioSource>();
     }
     public void ThrowDagger()
     {
@@ -92,6 +99,7 @@ public class K_DaggerController : MonoBehaviour
                 //Dagger Cooldown
                 if (_requestedInput.RightMouse && !_requestedInput.LeftMouse && !K_WeaponHolder.instance.HasWaepon())
                 {
+                    Play(throwDagger);
                     ThrowDagger();
                 }
                 break;
@@ -100,6 +108,7 @@ public class K_DaggerController : MonoBehaviour
                 {
                     //Debug.Log("Throw Catch Dagger");
                     _animator.SetTrigger("Catch");
+                    Play(click);
                     StopDagger();
                     break;
                 }
@@ -141,6 +150,7 @@ public class K_DaggerController : MonoBehaviour
                 if (!_requestedInput.RightMousePressing && dagger.hoockedCol)
                 {
                     daggerState = EDaggerState.Return;
+                    Play(pull);
                     dagger.Pull();
                     _timer = 0f;
                 }
@@ -184,4 +194,8 @@ public class K_DaggerController : MonoBehaviour
         }
     }
 
+    public void Play(AudioClip clip)
+    {
+        ad.PlayOneShot(clip);
+    }
 }
